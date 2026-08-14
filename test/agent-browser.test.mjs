@@ -1563,7 +1563,7 @@ test("page asset fetch timeout aborts a hung request", async () => {
           result: {
             value: {
               userAgent: "Exact Profile UA",
-              referer: "https://www.tiktok.com/@asianguyz/video/123"
+              referer: "https://www.tiktok.com/@creator_placeholder/video/123"
             }
           }
         };
@@ -1608,7 +1608,7 @@ test("allows same-profile poster and metadata content recovery without exposing 
             result: {
               value: {
                 userAgent: "Exact Profile UA",
-                referer: "https://www.tiktok.com/@asianguyz/video/123",
+                referer: "https://www.tiktok.com/@creator_placeholder/video/123",
                 sourceUrl: `https://media.example/${sourceProperty}.jpg?signature=sensitive`
               }
             }
