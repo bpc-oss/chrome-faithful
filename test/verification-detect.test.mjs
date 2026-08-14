@@ -47,10 +47,74 @@ test("populated token without a challenge frame means resolved, not blocked", ()
     title: "",
     tokenPresent: true,
     tokenPopulated: true,
-    tokenLength: 90
+    tokenLength: 90,
+    pendingWidgets: []
   });
   assert.equal(result.detected, false);
   assert.equal(result.resolved, true);
+});
+
+test("widget rendered but no iframe and no token is a pending-render challenge", () => {
+  const result = classifyChallenges({
+    visibleFrames: [],
+    allFrames: [],
+    textSample: "",
+    title: "",
+    tokenPresent: true,
+    tokenPopulated: false,
+    tokenLength: 0,
+    pendingWidgets: ["cf-turnstile"]
+  });
+  assert.equal(result.detected, true);
+  assert.equal(result.challenges[0].type, "turnstile");
+  assert.equal(result.challenges[0].pendingRender, true);
+  assert.equal(result.challenges[0].confidence, 0.6);
+});
+
+test("pending reCAPTCHA widget class is classified as recaptcha-v2", () => {
+  const result = classifyChallenges({
+    visibleFrames: [],
+    allFrames: [],
+    textSample: "",
+    title: "",
+    tokenPresent: false,
+    tokenPopulated: false,
+    tokenLength: 0,
+    pendingWidgets: ["g-recaptcha"]
+  });
+  assert.equal(result.challenges[0].type, "recaptcha-v2");
+  assert.equal(result.challenges[0].pendingRender, true);
+});
+
+test("a populated token suppresses the text-signal path even when challenge words appear", () => {
+  const result = classifyChallenges({
+    visibleFrames: [],
+    allFrames: [],
+    textSample: "turnstile widget on this page",
+    title: "Turnstile",
+    tokenPresent: true,
+    tokenPopulated: true,
+    tokenLength: 21,
+    pendingWidgets: []
+  });
+  assert.equal(result.detected, false);
+  assert.equal(result.resolved, true);
+});
+
+test("pending widget is classified ahead of a text signal", () => {
+  const result = classifyChallenges({
+    visibleFrames: [],
+    allFrames: [],
+    textSample: "please complete the turnstile verification",
+    title: "",
+    tokenPresent: true,
+    tokenPopulated: false,
+    tokenLength: 0,
+    pendingWidgets: ["cf-turnstile"]
+  });
+  assert.equal(result.detected, true);
+  assert.equal(result.challenges[0].type, "turnstile");
+  assert.equal(result.challenges[0].pendingRender, true);
 });
 
 test("clean page is not detected", () => {
@@ -58,7 +122,8 @@ test("clean page is not detected", () => {
     visibleFrames: [],
     allFrames: [],
     textSample: "DashboardEngagements",
-    title: "Dashboard"
+    title: "Dashboard",
+    pendingWidgets: []
   });
   assert.equal(result.detected, false);
 });

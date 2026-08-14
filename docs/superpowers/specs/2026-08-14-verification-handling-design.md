@@ -114,6 +114,25 @@ sequence auditable.
 - Solver backends are opt-in; without one, detection/hold/handoff/overlay/
   humanized interaction still work.
 
+## Live verification results (2026-08-14)
+
+Driven through the compliant bridge channel against the real `Baoping` Chrome
+profile (`scripts/verification/live-tests/`):
+
+| Scenario | Outcome |
+|---|---|
+| Cloudflare Turnstile demo (`demo.turnstile.workers.dev`) | Widget found and clicked; token read (`XXXX.DUMMY.TOKEN.XXXX` — the documented dummy token). No challenge iframe ever appears in the main document on this profile. |
+| Local page, always-pass test sitekey `1x00000000000000000000AA` | **`resolved: true`** — the populated token is correctly recognized as a completed widget, not a blocker. |
+| Local page, forced-interactive sitekey `3x00000000000000000000FF` | **`widget_pending_render`** — api.js loaded, `window.turnstile` API present, but the challenge iframe never renders and the token stays empty. The solver now reports this precise diagnosis instead of a misleading timeout. |
+| Diagnostic probe | `.cf-turnstile` container exists (70 px tall) with only an empty hidden `cf-turnstile-response` input; `frames: []`; no shadow root. Matches the earlier documented finding that Cloudflare's handshake stalls in this environment/profile. |
+
+Live findings drove three fixes: (1) detection now distinguishes *resolved* /
+*pending-render* / *active provider iframe* states (pending-widget classified
+before text signals, text signals suppressed when a token is populated);
+(2) `solveCheckbox` reports `widget_pending_render` when the challenge frame
+never appears; (3) handoff carries reload-and-retry guidance for the
+pending-render state.
+
 ## Known limits and follow-ups
 
 - Cross-origin challenge iframes (hCaptcha/Turnstile run as OOPIFs) cannot be

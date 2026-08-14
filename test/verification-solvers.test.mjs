@@ -69,6 +69,22 @@ test("solveCheckbox clicks the widget and polls for a token", async () => {
   assert.equal(result.tokenLength, 60);
 });
 
+test("solveCheckbox reports widget_pending_render when the challenge frame never appears", async () => {
+  const result = await solveCheckbox({
+    evaluate: async (expression) => {
+      const source = String(expression);
+      if (source.includes("rc-anchor")) return { x: 1, y: 1, kind: "widget" }; // CHECKBOX_LOCATE_EXPRESSION
+      if (source.includes("hasIframe")) return { hasIframe: false, tokenPopulated: false, widgetClass: "cf-turnstile" }; // WIDGET_STATE_EXPRESSION
+      return ""; // TOKEN_READ_EXPRESSION
+    },
+    click: async () => {},
+    timeoutMs: 1200
+  });
+  assert.equal(result.solved, false);
+  assert.equal(result.reason, "widget_pending_render");
+  assert.equal(result.widgetClass, "cf-turnstile");
+});
+
 test("solveCheckbox times out when no token appears", async () => {
   const result = await solveCheckbox({
     evaluate: async (expression) => {

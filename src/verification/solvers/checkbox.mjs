@@ -34,6 +34,18 @@ export const TOKEN_READ_EXPRESSION = `(() => {
   return values[0] || "";
 })()`;
 
+export const WIDGET_STATE_EXPRESSION = `(() => {
+  const widget = document.querySelector(".cf-turnstile, #cf-turnstile, .g-recaptcha");
+  if (!widget) return null;
+  const iframe = widget.querySelector("iframe");
+  const input = widget.querySelector("input[name*='-response'], input[name*='captcha']");
+  return {
+    hasIframe: !!iframe,
+    tokenPopulated: !!(input && input.value),
+    widgetClass: (widget.className || "").toString()
+  };
+})()`;
+
 export async function solveCheckbox({ evaluate, click, tokenMinLength = 20, timeoutMs = 20000 }) {
   const box = await evaluate(CHECKBOX_LOCATE_EXPRESSION);
   if (!box) return { solved: false, reason: "checkbox_not_found" };
@@ -48,6 +60,18 @@ export async function solveCheckbox({ evaluate, click, tokenMinLength = 20, time
       label: "challenge token"
     });
   } catch (error) {
+    // Distinguish a widget stuck in its pre-render handshake (no challenge
+    // iframe ever appeared) from a real interactive challenge that simply
+    // was not solved in time.
+    let state = null;
+    try {
+      state = await evaluate(WIDGET_STATE_EXPRESSION);
+    } catch {
+      state = null;
+    }
+    if (state && !state.hasIframe && !state.tokenPopulated) {
+      return { solved: false, reason: "widget_pending_render", widget: box.kind, widgetClass: state.widgetClass, error: error.message };
+    }
     return { solved: false, reason: "token_timeout", widget: box.kind, error: error.message };
   }
   return { solved: true, widget: box.kind, tokenPrefix: token.slice(0, 24), tokenLength: token.length };

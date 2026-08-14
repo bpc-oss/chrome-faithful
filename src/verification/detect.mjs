@@ -34,6 +34,15 @@ export const DETECT_EXPRESSION = `(() => {
   const tokenInputs = [...document.querySelectorAll("input[name*='-response'], input[name*='captcha'], textarea.g-recaptcha-response")];
   const tokenValues = tokenInputs.map((el) => el.value || "").filter((v) => v.length > 0);
   const checkboxFrames = [...document.querySelectorAll("iframe")].filter(visible).map((f) => f.src || "");
+  // Challenge widgets that rendered a container but no provider iframe and no
+  // populated token: the widget is stuck in a pre-render handshake (a real,
+  // commonly observed Turnstile state on flaky networks).
+  const widgetContainers = [...document.querySelectorAll(".cf-turnstile, .g-recaptcha, [class*=turnstile], [class*=captcha]")].filter(visible);
+  const pendingWidgets = widgetContainers.filter((w) => {
+    const hasIframe = !!w.querySelector("iframe");
+    const input = w.querySelector("input[name*='-response'], input[name*='captcha']");
+    return !hasIframe && !(input && input.value);
+  }).map((w) => (w.className || "").toString()).filter(Boolean);
   return {
     url: location.href,
     title: document.title,
@@ -43,7 +52,8 @@ export const DETECT_EXPRESSION = `(() => {
     textSample: text.slice(0, 1500),
     tokenPresent: tokenInputs.length > 0,
     tokenPopulated: tokenValues.length > 0,
-    tokenLength: tokenValues.reduce((n, v) => n + v.length, 0)
+    tokenLength: tokenValues.reduce((n, v) => n + v.length, 0),
+    pendingWidgets
   };
 })()`;
 
@@ -76,7 +86,19 @@ export function classifyChallenges(page) {
   }
   const text = ((page.textSample || "") + " " + (page.title || "")).toLowerCase();
   const textHits = CHALLENGE_TEXT_SIGNALS.filter((signal) => text.includes(signal.toLowerCase()));
-  if (textHits.length > 0 && challenges.length === 0) {
+  // Widget rendered but no provider iframe and no token: stuck pre-render
+  // handshake (commonly Turnstile on flaky networks). More specific than a
+  // bare text signal, so it is classified first.
+  if (challenges.length === 0 && (page.pendingWidgets || []).length > 0) {
+    const joined = page.pendingWidgets.join(" ").toLowerCase();
+    const type = /turnstile|cf-/.test(joined) ? "turnstile"
+      : /recaptcha|g-recaptcha/.test(joined) ? "recaptcha-v2"
+      : "generic";
+    push({ type, provider: "widget-pending", confidence: 0.6, interactive: true, frameUrl: null, pendingRender: true, widgetClasses: page.pendingWidgets });
+  }
+  // Text signals alone are weak evidence; a populated token means the widget
+  // already completed, so suppress the text-signal path in that case.
+  if (textHits.length > 0 && challenges.length === 0 && page.tokenPopulated !== true) {
     push({ type: "generic", provider: "text-signal", confidence: 0.55, interactive: true, frameUrl: null, textHits });
   }
   // A populated challenge token input strongly suggests an active invisible
@@ -91,7 +113,8 @@ export function classifyChallenges(page) {
       visibleFrames: (page.visibleFrames || []).length,
       textHits,
       tokenPresent: page.tokenPresent === true,
-      tokenPopulated: page.tokenPopulated === true
+      tokenPopulated: page.tokenPopulated === true,
+      pendingWidgets: (page.pendingWidgets || []).length
     }
   };
 }

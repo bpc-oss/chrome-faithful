@@ -33,6 +33,7 @@ import {
   solveSlider,
   captureChallengeAssets,
   runSolvePipeline,
+  buildHandoffMessage,
   VerificationHold,
   createBackendFromEnv
 } from "./verification/index.mjs";
@@ -1519,7 +1520,13 @@ server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
         });
         if (result.solved) verification.resume(profileName, { reason: `solved ${challenge.type}` });
         else verification.handoff(profileName, challenge);
-        return textResult({ profileName, challenge, ...result, hold: verification.status(profileName) });
+        return textResult({
+          profileName,
+          challenge,
+          ...result,
+          hold: verification.status(profileName),
+          ...(result.solved ? {} : { handoff: buildHandoffMessage({ profileName, challenge }) })
+        });
       }
       throw new Error(`Unknown verification tool: ${params.name}`);
     }

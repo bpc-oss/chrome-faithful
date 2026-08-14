@@ -20,6 +20,10 @@ export const CHALLENGE_GUIDANCE = {
     "Click the Cloudflare Turnstile checkbox if visible.",
     "If the checkbox never renders, the challenge is silent (invisible mode); wait for it to clear or reload."
   ],
+  "turnstile-pending": [
+    "The Turnstile widget loaded but its challenge frame did not render — usually a network/Cloudflare handshake stall.",
+    "Reload the page once and retry, or complete the challenge manually in the visible browser window."
+  ],
   geetest: [
     "Drag the slider to align the gap in the puzzle image.",
     "The gap position can be located automatically by the opencv backend if configured."
@@ -36,16 +40,20 @@ export const CHALLENGE_GUIDANCE = {
 };
 
 export function buildHandoffMessage({ profileName, challenge, note = null }) {
-  const type = challenge?.type || "generic";
+  let type = challenge?.type || "generic";
+  if (challenge?.pendingRender === true && (type === "turnstile" || type === "recaptcha-v2")) {
+    type = `${type}-pending`;
+  }
   const guidance = CHALLENGE_GUIDANCE[type] || CHALLENGE_GUIDANCE.generic;
   return {
     profileName,
     action: "solve_manually",
     challenge: {
-      type,
+      type: challenge?.type || "generic",
       provider: challenge?.provider || null,
       confidence: challenge?.confidence ?? null,
-      frameUrl: challenge?.frameUrl || null
+      frameUrl: challenge?.frameUrl || null,
+      pendingRender: challenge?.pendingRender === true
     },
     guidance,
     ...(note ? { note } : {}),
