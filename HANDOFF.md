@@ -5,7 +5,8 @@
 - Provider-neutral Chrome Faithful core, first-party DSH bundle, and local-first
   visual extraction are implemented on `codex/dsh-bundle-implementation`.
 - The private remote feature branch and `main` contain the reviewed visual
-  implementation through `ebfb9ba`; GitHub Actions run `31814011114` passed.
+  implementation and live OCR fix through `37309b0`; GitHub Actions run
+  `31817305227` passed.
 - Nothing has been published to npm and repository visibility was not changed.
 - DSH support targets `@deepseek-ai/dsh 0.1.0-rc.6`; revalidate composition for
   every DSH RC.
@@ -119,8 +120,8 @@
   re-review returned `APPROVED` with 37/37 independent checks and no remaining
   finding.
 - GitHub Actions run
-  `https://github.com/bpc-oss/chrome-faithful/actions/runs/31814011114` at
-  `ebfb9ba` passed both Ubuntu and Windows jobs. Two preceding Windows-only
+  `https://github.com/bpc-oss/chrome-faithful/actions/runs/31817305227` at
+  `37309b0` passed both Ubuntu and Windows jobs. Two preceding Windows-only
   failures exposed and led to fixes for direct `.cmd` spawning during MCPB
   construction and PP-OCR output under a `cp1252` console; the final run
   exercises the portable npm launcher and binary UTF-8 OCR protocol.
