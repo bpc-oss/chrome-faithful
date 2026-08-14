@@ -4,8 +4,8 @@
 
 - Provider-neutral Chrome Faithful core, first-party DSH bundle, and local-first
   visual extraction are implemented on `codex/dsh-bundle-implementation`.
-- The private remote currently remains at release baseline `5cb2209`; visual
-  commits `aad1848..3838ba2` are local until independent review and final CI.
+- The private remote feature branch and `main` contain the reviewed visual
+  implementation through `ebfb9ba`; GitHub Actions run `31814011114` passed.
 - Nothing has been published to npm and repository visibility was not changed.
 - DSH support targets `@deepseek-ai/dsh 0.1.0-rc.6`; revalidate composition for
   every DSH RC.
@@ -111,14 +111,22 @@
   incomplete timeout process cleanup, and the omitted MCPB adapter. Targeted
   re-review returned `APPROVED` with 37/37 independent checks and no remaining
   finding.
+- GitHub Actions run
+  `https://github.com/bpc-oss/chrome-faithful/actions/runs/31814011114` at
+  `ebfb9ba` passed both Ubuntu and Windows jobs. Two preceding Windows-only
+  failures exposed and led to fixes for direct `.cmd` spawning during MCPB
+  construction and PP-OCR output under a `cp1252` console; the final run
+  exercises the portable npm launcher and binary UTF-8 OCR protocol.
 - The default WSL Node is `v20.20.2`, below the declared `>=22.12.0` engine;
   its DSH host test fails at `Promise.withResolvers`. This is an environment
   rejection, not counted as a pass. All acceptance evidence uses Node 22.12.0.
 
 ## Remaining gates
 
-- Push only intended tracked files to the private feature branch and `main`,
-  run GitHub Actions on the resulting commit, and record the final run URL.
+- Optional real OCR/VLM quality acceptance remains unavailable until the user
+  supplies local model directories and runtime dependencies. Keep this clearly
+  separate from the completed transport, packaging, host-contract, and CI
+  acceptance; do not download models or use a cloud fallback implicitly.
 - GitHub Actions may emit a non-failing annotation because pinned checkout and
   setup-node revisions declare older Node metadata while GitHub forces Node 24.
   Track upstream pinned releases; do not unpin actions.
