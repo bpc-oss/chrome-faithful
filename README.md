@@ -53,6 +53,11 @@ Chrome Faithful is the version with no trade-offs:
 - **Raw CDP when you need it.** `chrome_cdp` with redacted network projections;
   request/response bodies stay inside the plugin and token/cookie/header
   fields are rejected from results.
+- **Structured verification handling.** Multi-signal challenge detection that
+  distinguishes *resolved* / *pending-render* / *active challenge* states,
+  click-first solving for the common "click once and it passes" cases, and an
+  honest handoff when a challenge needs a human — see
+  [Verification handling](#verification-handling).
 - **Codex-compatible JS API.** `src/agent-browser.mjs` implements Codex's
   `agent.browsers` surface (tabs, locators, CUA, Playwright-style selectors,
   clipboard, dialogs, downloads) so JavaScript agents can use the same runtime.
@@ -62,7 +67,7 @@ Chrome Faithful is the version with no trade-offs:
 ```
 ┌─────────────┐   stdio    ┌──────────────────────┐   ws://127.0.0.1    ┌─────────────────────────┐
 │ MCP client  │ ─────────► │ src/mcp-server.mjs   │ ──────────────────► │ src/bridge-server.mjs   │
-│ (Claude,    │            │ MCP tools            │  (Bearer secret)    │ authenticated localhost  │
+│ (Claude,    │            │ MCP tools (37)       │  (Bearer secret)    │ authenticated localhost  │
 │  Codex, …)  │            └──────────────────────┘                     │ multi-profile router    │
 └─────────────┘                                                        └───────────┬─────────────┘
                                                                                     │ chrome.debugger
@@ -82,10 +87,14 @@ Chrome Faithful is the version with no trade-offs:
   ordinary Chrome startup with bounded extension-registration confirmation.
 - `src/mcp-server.mjs` — the MCP tool surface (37 tools).
 - `src/agent-browser.mjs` — JavaScript `agent.browsers` compatibility adapter.
+- `src/verification/` — challenge detection, hold state machine, handoff,
+  overlay dismissal, humanized input, and the solve pipeline (checkbox /
+  slider / click-first generic / capture-for-backend).
 - `src/file-injection.mjs`, `src/page-asset.mjs`, `src/scroll-capture.mjs`,
   `src/scroll-asset-capture.mjs`, `src/network-request.mjs`,
   `src/network-response.mjs` — the feature modules.
-- `scripts/` — Windows installers, acceptance harnesses, and codex parity tooling.
+- `scripts/` — Windows installers, acceptance harnesses, live-test harness,
+  and codex parity tooling.
 
 ## Safety model
 
@@ -170,35 +179,76 @@ screenshots accept an optional document-coordinate `clip` and absolute
 
 Because Chrome Faithful drives your *real* profile, most bot checks never
 trigger. When a platform still presents a human-verification challenge, the
-verification module gives agents a structured loop instead of blind retries:
+verification module gives agents a structured loop instead of blind retries.
 
-1. `chrome_verification_detect` — multi-signal detection and classification
-   (reCAPTCHA v2/v3, hCaptcha, Cloudflare Turnstile, GeeTest, slider,
-   image-select, and text signals). Optionally records a per-profile hold.
-2. `chrome_verification_solve` — picks the matching strategy automatically:
-   checkbox click + token wait (reCAPTCHA v2 / hCaptcha / Turnstile),
-   humanized slider drag (GeeTest / slider), or capture for an external
-   OCR/ASR backend (image-select / generic). Clears the hold on success,
-   produces a human handoff message otherwise.
-3. `chrome_verification_status` / `chrome_verification_resume` — per-profile
-   hold state machine (`idle → challenge_detected → waiting_for_human →
-   cleared`) with an auditable transition log.
-4. `chrome_verification_capture` — saves the challenge image region and/or the
-   audio URL and submits them to the configured backend for an answer.
-5. `chrome_verification_dismiss_overlays` — dismisses benign cookie/onboarding
-   overlays with a strict allowlist.
+**Detection** (`chrome_verification_detect`) classifies three real-world
+states:
 
-Interaction is humanized throughout: seeded bezier trajectories with jitter,
-monotonic-x slider drags, ease-in-out timing (`src/verification/input.mjs`).
-Recognition brains (audio transcription, image OCR, slider gap detection) are
-**external and optional** — enable one via the `AGENTOS_VERIFICATION_BACKEND`
-environment variable, e.g.
-`cli:python scripts/verification/captcha-backend-adapter.py` (reference JSON
-adapter for the Python faster-whisper / OCR / opencv stack) or an HTTP
-endpoint. Without a backend, detection, hold/resume, handoff, overlay
-dismissal, and humanized interaction all still work.
+| State | What it means | Action |
+|---|---|---|
+| `resolved` | A token is already populated (e.g. invisible challenge completed) | Not a blocker — proceed |
+| active provider iframe (reCAPTCHA v2/v3, hCaptcha, Turnstile, GeeTest, vaptcha) | A visible challenge widget is present | Solve it |
+| `pending-render` | A widget container exists but its challenge iframe never rendered — typically a network/provider handshake stall | Reload-and-retry guidance or human handoff |
+
+Static markers (the ubiquitous reCAPTCHA badge) are explicitly excluded, so a
+page that merely *loads* reCAPTCHA is never reported as a challenge.
+
+**Solving** (`chrome_verification_solve`) picks the strategy by type:
+
+1. **Checkbox / token wait** — reCAPTCHA v2 / hCaptcha / Turnstile: click the
+   visible challenge control (provider iframe center preferred) and poll the
+   hidden response token until populated.
+2. **Humanized slider drag** — GeeTest / slider: locate the handle, compute the
+   target (track end or a backend gap offset), drag with a seeded bezier
+   trajectory (monotonic x, jitter, ease-in-out delays), then verify
+   acceptance. A gap behind the handle fails closed instead of dragging
+   backwards.
+3. **Click-first generic** — text-signal / unknown challenges: click the
+   obvious "Verify you are human" / "验证" / "继续" button (or challenge
+   checkbox) once, wait briefly for a token, and only then escalate.
+4. **Capture for backend** — image-select / audio challenges: save the
+   challenge image region and/or audio URL and submit them to an external
+   OCR/ASR backend.
+
+**Hold state machine** (`chrome_verification_status` /
+`chrome_verification_resume`) — per-profile
+`idle → challenge_detected → waiting_for_human → cleared` with an auditable,
+bounded transition log. `chrome_verification_solve` clears the hold on success,
+hands off on failure, and rolls the hold back if the solver itself crashes.
+
+**Humanized input** — seeded bezier trajectories with jitter, monotonic-x
+slider drags, and ease-in-out timing (`src/verification/input.mjs`),
+deterministic and testable.
+
+**Recognition backends are external and optional.** Enable one via the
+`AGENTOS_VERIFICATION_BACKEND` environment variable, e.g.
+`cli:python scripts/verification/captcha-backend-adapter.py` (a reference JSON
+adapter for the Python faster-whisper / OCR / opencv stack; it prefers the
+Agent OS captcha connector when importable and falls back to standalone
+faster-whisper / ddddocr / tesseract / opencv otherwise) or an HTTP endpoint.
+Without a backend, detection, hold/resume, handoff, overlay dismissal, and
+humanized interaction all still work.
 
 Design: [docs/superpowers/specs/2026-08-14-verification-handling-design.md](docs/superpowers/specs/2026-08-14-verification-handling-design.md)
+
+## Live testing
+
+`scripts/verification/live-tests/` contains reproducible harnesses that drive
+real Chrome profiles through the compliant bridge channel (task tabs only;
+they are closed after each run):
+
+- `live-verification-test.mjs [url] [profileName]` — generic detect → solve →
+  re-detect loop against any URL.
+- `live-cf-test.mjs [profileName]` — Cloudflare Turnstile with the official
+  test sitekeys (`1x00000000000000000000AA` always-pass,
+  `3x00000000000000000000FF` forced interactive) plus a click-to-pass
+  simulation fixture. Serve fixtures with
+  `python -m http.server 18999 --directory scripts/verification/live-tests`.
+- `cf-diagnostic-probe.mjs [profileName]` — dumps widget markup / iframe /
+  `window.turnstile` state for the "widget rendered but challenge iframe
+  missing" stall.
+- `final-regression.mjs [profileName]` — badge-only pages must not be
+  detected; click-to-pass must still solve.
 
 ## JavaScript integration
 
@@ -239,8 +289,8 @@ acceptance additionally requires two concurrently connected real profiles,
 per-profile `selftest`, background tab navigation, locator click/fill, raw CDP,
 screenshot, history, clipboard round-trip with restoration, dry page-File
 injection, reconnect, and proof that only acceptance-owned tabs were closed —
-driven by `scripts/live-acceptance.mjs` and
-`scripts/differential-acceptance.mjs`.
+driven by `scripts/live-acceptance.mjs`,
+`scripts/differential-acceptance.mjs`, and the live-test harness above.
 
 ## Documentation
 
@@ -248,7 +298,7 @@ driven by `scripts/live-acceptance.mjs` and
 - [CONTRIBUTING.md](CONTRIBUTING.md) — development workflow
 - [docs/CODEX_PARITY.md](docs/CODEX_PARITY.md) — Codex parity design
 - [docs/superpowers/specs/](docs/superpowers/specs/) — design specs
-  (profile launch, resilient bridge ownership)
+  (profile launch, resilient bridge ownership, verification handling)
 - [skills/control-chrome-cdp/SKILL.md](skills/control-chrome-cdp/SKILL.md) —
   agent-facing operating skill
 - [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) — bundled third-party code
