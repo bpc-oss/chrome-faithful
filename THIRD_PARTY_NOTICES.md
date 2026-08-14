@@ -61,7 +61,7 @@ Copyright (c) 2026 DeepSeek.
 
 Licensed under the MIT License.
 
-Source: https://github.com/deepseek-ai/deepseek-harness/tree/main/packages/boot/app-boot
+Source: https://github.com/deepseek-ai/deepseek-harness/tree/47f943859bef60e4160492346772ded9b24f765a/packages/boot/app-boot
 
 This pinned package is used only by the hermetic DSH host-contract tests and is
 omitted from the production MCPB dependency install.
@@ -72,7 +72,7 @@ Copyright (c) 2026 DeepSeek.
 
 Licensed under the MIT License.
 
-Source: https://github.com/deepseek-ai/deepseek-harness/tree/main/packages/mcp/mcp-client
+Source: https://github.com/deepseek-ai/deepseek-harness/tree/47f943859bef60e4160492346772ded9b24f765a/packages/mcp/mcp-client
 
 This pinned package is used only by the hermetic DSH host-contract tests and is
 omitted from the production MCPB dependency install.

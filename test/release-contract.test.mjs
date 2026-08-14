@@ -157,6 +157,11 @@ test("third-party notices cover every direct package dependency", async () => {
   for (const packageName of directPackages) {
     assert.match(notices, new RegExp(`^## ${packageName.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}\\b`, "m"));
   }
+  assert.doesNotMatch(notices, /deepseek-harness\/tree\/(?:main|master)\//);
+  assert.equal(
+    (notices.match(/deepseek-harness\/tree\/47f943859bef60e4160492346772ded9b24f765a\//g) ?? []).length,
+    2
+  );
 });
 
 async function dryRunPack(cwd) {
