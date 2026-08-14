@@ -9,6 +9,10 @@
   "bugs": {
     "url": "https://github.com/bpc-oss/chrome-faithful/issues"
   },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./mcp-server": "./src/mcp-server.mjs"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bpc-oss/chrome-faithful.git"

@@ -111,3 +111,29 @@ test("extension limits host access to its localhost bridge", async () => {
 
   assert.deepEqual(manifest.host_permissions, ["http://127.0.0.1/*"]);
 });
+
+test("DSH bundle has a stable public launcher and exact core version", async () => {
+  const [rootPackage, bundle] = await Promise.all([
+    readJson("package.json"),
+    readJson("packages/dsh-plugin-chrome-faithful/package.json")
+  ]);
+  const launcher = await readFile(
+    new URL("packages/dsh-plugin-chrome-faithful/bin/chrome-faithful-mcp.mjs", root),
+    "utf8"
+  );
+
+  assert.equal(rootPackage.exports["./mcp-server"], "./src/mcp-server.mjs");
+  assert.equal(bundle.name, "@bpc-oss/dsh-plugin-chrome-faithful");
+  assert.equal(bundle.version, rootPackage.version);
+  assert.equal(bundle.dependencies["chrome-faithful"], rootPackage.version);
+  assert.equal(bundle.peerDependencies?.["@deepseek-ai/dsh-mcp-client"], undefined);
+  assert.equal(bundle.dependencies?.["@deepseek-ai/dsh-mcp-client"], undefined);
+  assert.equal(bundle.engines.node, rootPackage.engines.node);
+  assert.equal(bundle.dsh.bundle.patch, "./cordis.patch.yml");
+  assert.deepEqual(bundle.files, ["bin/", "cordis.patch.yml", "README.md"]);
+  assert.equal(bundle.exports["./mcp-server"], "./bin/chrome-faithful-mcp.mjs");
+  assert.equal(bundle.bin["chrome-faithful-mcp"], "./bin/chrome-faithful-mcp.mjs");
+
+  assert.match(launcher, /^#!\/usr\/bin\/env node\nimport "chrome-faithful\/mcp-server";\n$/);
+  assert.doesNotMatch(launcher, /\b(?:spawn|exec|shell|catch|fallback)\b/i);
+});

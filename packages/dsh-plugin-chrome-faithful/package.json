@@ -1,0 +1,44 @@
+{
+  "name": "@bpc-oss/dsh-plugin-chrome-faithful",
+  "version": "0.4.0",
+  "description": "First-party DeepSeek Harness bundle for exact-profile Chrome control through Chrome Faithful.",
+  "license": "MIT",
+  "author": "bpc-oss",
+  "type": "module",
+  "homepage": "https://github.com/bpc-oss/chrome-faithful#dsh-first-class-integration",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bpc-oss/chrome-faithful.git",
+    "directory": "packages/dsh-plugin-chrome-faithful"
+  },
+  "bugs": {
+    "url": "https://github.com/bpc-oss/chrome-faithful/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    "./mcp-server": "./bin/chrome-faithful-mcp.mjs",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "chrome-faithful-mcp": "./bin/chrome-faithful-mcp.mjs"
+  },
+  "files": [
+    "bin/",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "chrome-faithful": "0.4.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
