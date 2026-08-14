@@ -4,6 +4,7 @@ import { readPngDimensions } from "./png.mjs";
 import { MAX_VISUAL_RESULT_BYTES, normalizeVisualResult } from "./result.mjs";
 
 export const MAX_VISUAL_PROMPT_TEXT = 1_000;
+export const MAX_VISUAL_SCREENSHOT_BYTES = 50_331_648;
 
 const MODES = new Set(["ocr", "semantic", "both"]);
 const SAFE_BACKEND_KIND = /^[a-z0-9][a-z0-9-]{0,63}$/;
@@ -53,10 +54,16 @@ function assertBackendResponse(raw, stage) {
 }
 
 function enforceFinalResult(result) {
-  if (Buffer.byteLength(JSON.stringify(result), "utf8") > MAX_VISUAL_RESULT_BYTES) {
+  serializeVisualResult(result);
+  return result;
+}
+
+export function serializeVisualResult(result) {
+  const text = JSON.stringify(result);
+  if (Buffer.byteLength(text, "utf8") > MAX_VISUAL_RESULT_BYTES) {
     throw new Error("visual result exceeds the supported output limit");
   }
-  return result;
+  return text;
 }
 
 export async function runVisualExtract({
@@ -83,7 +90,15 @@ export async function runVisualExtract({
     throw new Error("local semantic backend is not configured");
   }
 
-  const bytes = Buffer.from(await screenshot({ fullPage, clip }));
+  let bytes;
+  try {
+    bytes = Buffer.from(await screenshot({ fullPage, clip }));
+  } catch {
+    throw new Error("visual screenshot capture failed");
+  }
+  if (bytes.length > MAX_VISUAL_SCREENSHOT_BYTES) {
+    throw new Error("visual screenshot exceeds the supported byte limit");
+  }
   const { width, height } = readPngDimensions(bytes);
   const payload = {
     imageBase64: bytes.toString("base64"),

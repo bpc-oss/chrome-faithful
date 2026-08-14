@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 
-import { MAX_VISUAL_PROMPT_TEXT, runVisualExtract } from "../src/visual/extract.mjs";
+import {
+  MAX_VISUAL_PROMPT_TEXT,
+  MAX_VISUAL_SCREENSHOT_BYTES,
+  runVisualExtract,
+  serializeVisualResult
+} from "../src/visual/extract.mjs";
+import { MAX_VISUAL_RESULT_BYTES } from "../src/visual/result.mjs";
 
 function pngFixture(width = 200, height = 100) {
   const bytes = Buffer.alloc(24);
@@ -159,4 +165,55 @@ test("known PP-OCR setup errors are actionable without reflecting raw output", a
     assert.doesNotMatch(error.message, /private path/);
     return true;
   });
+});
+
+test("redacts screenshot capture diagnostics before they reach MCP", async () => {
+  await assert.rejects(() => runVisualExtract({
+    screenshot: async () => {
+      throw new Error("capture failed at C:\\Users\\secret\\shot.png imageBase64=TOPSECRET");
+    },
+    ocrBackend: fakeOcrBackend
+  }), (error) => {
+    assert.equal(error.message, "visual screenshot capture failed");
+    assert.doesNotMatch(error.message, /Users\\secret|imageBase64|TOPSECRET/);
+    return true;
+  });
+});
+
+test("rejects oversized screenshot bytes before backend invocation", async () => {
+  let invoked = false;
+  await assert.rejects(() => runVisualExtract({
+    screenshot: async () => Buffer.alloc(MAX_VISUAL_SCREENSHOT_BYTES + 1),
+    ocrBackend: {
+      kind: "fake-ocr",
+      async request() {
+        invoked = true;
+        return { blocks: [] };
+      }
+    }
+  }), /screenshot exceeds the supported byte limit/);
+  assert.equal(invoked, false);
+});
+
+test("serializes near-limit MCP visual output in the exact bounded wire format", async () => {
+  const result = await runVisualExtract({
+    screenshot: async () => image,
+    ocrBackend: {
+      kind: "fake-ocr",
+      async request() {
+        return {
+          blocks: Array.from({ length: 2_000 }, () => ({
+            text: "x".repeat(450),
+            confidence: 1,
+            box: [0, 0, 200, 100]
+          }))
+        };
+      }
+    }
+  });
+
+  const text = serializeVisualResult(result);
+  assert.ok(Buffer.byteLength(text, "utf8") <= MAX_VISUAL_RESULT_BYTES);
+  assert.ok(Buffer.byteLength(JSON.stringify(result, null, 2), "utf8") > MAX_VISUAL_RESULT_BYTES);
+  assert.deepEqual(JSON.parse(text), result);
 });

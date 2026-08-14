@@ -108,6 +108,8 @@ test("MCPB build installs the lockfile-defined production dependency tree", asyn
   assert.match(source, /npm(?:\.cmd)?["']?/);
   assert.match(source, /\bci\b/);
   assert.match(source, /--omit=dev/);
+  assert.match(source, /path\.join\(root, "integrations", "ppocr"\)/);
+  assert.match(source, /ppocrv5_mobile\.py/);
   assert.doesNotMatch(source, /["']node_modules["']/);
 });
 
@@ -116,6 +118,7 @@ test("CI grants read-only contents access and pins actions by commit", async () 
   const actionRefs = [...workflow.matchAll(/uses:\s*[^@\s]+@([^\s#]+)/g)].map((match) => match[1]);
 
   assert.match(workflow, /^permissions:\s*\n\s+contents:\s*read\s*$/m);
+  assert.equal((workflow.match(/npm run build:mcpb/g) || []).length, 2);
   assert.ok(actionRefs.length > 0);
   assert.equal(actionRefs.every((ref) => /^[0-9a-f]{40}$/.test(ref)), true);
 });

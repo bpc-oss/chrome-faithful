@@ -11,6 +11,39 @@ export class VisualBackendError extends Error {
   }
 }
 
+function waitForClose(closed, timeoutMs) {
+  return Promise.race([
+    closed.then(() => true),
+    new Promise((resolve) => setTimeout(() => resolve(false), timeoutMs))
+  ]);
+}
+
+function forceKillWindowsTree(pid) {
+  return new Promise((resolve) => {
+    let killer;
+    try {
+      killer = spawn("taskkill.exe", ["/pid", String(pid), "/t", "/f"], {
+        shell: false,
+        windowsHide: true,
+        stdio: "ignore"
+      });
+    } catch {
+      resolve();
+      return;
+    }
+    const timer = setTimeout(() => {
+      try { killer.kill(); } catch {}
+      resolve();
+    }, 2_000);
+    const done = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    killer.once("error", done);
+    killer.once("close", done);
+  });
+}
+
 function boundedPositiveInteger(value, fallback, maximum) {
   const number = Number(value ?? fallback);
   if (!Number.isSafeInteger(number) || number < 1) {
@@ -69,13 +102,25 @@ class CliVisualBackend {
     const input = serializeRequest(payload, this.maxRequestBytes);
     return new Promise((resolve, reject) => {
       let settled = false;
+      let stopping = false;
       let responseBytes = 0;
       const chunks = [];
-      const child = spawn(this.command, this.args, {
-        shell: false,
-        windowsHide: true,
-        stdio: ["pipe", "pipe", "pipe"]
-      });
+      let child;
+      try {
+        child = spawn(this.command, this.args, {
+          shell: false,
+          windowsHide: true,
+          detached: process.platform !== "win32",
+          stdio: ["pipe", "pipe", "pipe"]
+        });
+      } catch {
+        reject(new VisualBackendError("visual backend could not be started"));
+        return;
+      }
+
+      let closeResolve;
+      const closed = new Promise((resolveClose) => { closeResolve = resolveClose; });
+      child.once("close", closeResolve);
 
       const finish = (error, result) => {
         if (settled) return;
@@ -84,19 +129,37 @@ class CliVisualBackend {
         if (error) reject(error);
         else resolve(result);
       };
-      const stop = (message) => {
-        child.kill();
+      const stop = async (message) => {
+        if (settled || stopping) return;
+        stopping = true;
+        child.stdin.destroy();
+        try { child.kill("SIGTERM"); } catch {}
+        let exited = await waitForClose(closed, 250);
+        if (!exited) {
+          if (process.platform === "win32") {
+            await forceKillWindowsTree(child.pid);
+            try { child.kill("SIGKILL"); } catch {}
+          } else {
+            try { process.kill(-child.pid, "SIGKILL"); }
+            catch { try { child.kill("SIGKILL"); } catch {} }
+          }
+          exited = await waitForClose(closed, 2_000);
+        }
+        if (!exited) {
+          try { child.kill("SIGKILL"); } catch {}
+          await waitForClose(closed, 2_000);
+        }
         finish(new VisualBackendError(message));
       };
       const timer = setTimeout(() => {
-        stop(`visual backend timed out after ${this.timeoutMs}ms`);
+        void stop(`visual backend timed out after ${this.timeoutMs}ms`);
       }, this.timeoutMs);
 
       child.stdout.on("data", (chunk) => {
         if (settled) return;
         responseBytes += chunk.length;
         if (responseBytes > this.maxResponseBytes) {
-          stop("visual backend exceeded the response limit");
+          void stop("visual backend exceeded the response limit");
           return;
         }
         chunks.push(chunk);
@@ -107,7 +170,7 @@ class CliVisualBackend {
         finish(new VisualBackendError("visual backend could not be started"));
       });
       child.on("close", (code, signal) => {
-        if (settled) return;
+        if (settled || stopping) return;
         if (code !== 0 || signal) {
           finish(new VisualBackendError("visual backend exited unsuccessfully"));
           return;

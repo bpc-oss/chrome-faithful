@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:http";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
@@ -52,6 +55,25 @@ test("CLI backend kills a hung child at the deadline", async () => {
   assert.ok(Date.now() - started < 2_000);
 });
 
+test("CLI backend forcefully terminates a child that ignores graceful shutdown", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "chrome-faithful-visual-"));
+  const pidPath = path.join(directory, "pid.txt");
+  let pid;
+  try {
+    const backend = createVisualBackend(`cli:${JSON.stringify([
+      process.execPath, fixturePath, "ignore-term", pidPath
+    ])}`, { timeoutMs: 100 });
+    await assert.rejects(() => backend.request({ action: "ocr" }), /timed out/);
+    pid = Number(await readFile(pidPath, "utf8"));
+    assert.throws(() => process.kill(pid, 0), /ESRCH|not found|no such process/i);
+  } finally {
+    if (Number.isInteger(pid)) {
+      try { process.kill(pid, "SIGKILL"); } catch {}
+    }
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("CLI backend bounds stdout and never exposes stderr", async () => {
   const oversized = createVisualBackend(`cli:${JSON.stringify([
     process.execPath, fixturePath, "oversize"
@@ -67,6 +89,21 @@ test("CLI backend bounds stdout and never exposes stderr", async () => {
     assert.doesNotMatch(error.message, /super-secret/);
     return true;
   });
+});
+
+test("CLI backend redacts synchronous spawn argument failures", async () => {
+  for (const spec of [
+    `cli:\0SECRET_COMMAND_PATH`,
+    `cli:${JSON.stringify([process.execPath, "\0SECRET_ARGUMENT_PATH"])}`
+  ]) {
+    const backend = createVisualBackend(spec);
+    await assert.rejects(() => backend.request({ action: "ocr" }), (error) => {
+      assert.ok(error instanceof VisualBackendError);
+      assert.equal(error.message, "visual backend could not be started");
+      assert.doesNotMatch(error.message, /SECRET|COMMAND|ARGUMENT|PATH/);
+      return true;
+    });
+  }
 });
 
 test("HTTP backend rejects non-loopback, TLS, userinfo, and missing ports", () => {

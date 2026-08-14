@@ -1,4 +1,4 @@
-import { cp, mkdir, rm } from "node:fs/promises";
+import { access, cp, mkdir, rm } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,6 +16,10 @@ for (const name of ["src", "package.json", "package-lock.json"]) {
     recursive: true
   });
 }
+const ppocrTarget = path.join(stage, "server", "integrations", "ppocr");
+await mkdir(path.dirname(ppocrTarget), { recursive: true });
+await cp(path.join(root, "integrations", "ppocr"), ppocrTarget, { recursive: true });
+await access(path.join(ppocrTarget, "ppocrv5_mobile.py"));
 
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 const install = spawnSync(npmCommand, ["ci", "--omit=dev", "--ignore-scripts"], {

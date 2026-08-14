@@ -2,105 +2,123 @@
 
 ## Current state
 
-- Provider-neutral Chrome Faithful core plus first-party DSH bundle is complete.
-- Branch: `codex/dsh-bundle-implementation`; sanitized release and vision-doc
-  history through `7bc945b` is on both `origin/main` and
-  `origin/codex/dsh-bundle-implementation`.
-- GitHub repository remains private. Nothing has been published to npm and no
-  repository visibility change was made.
-- A local-first DSH vision extension is approved and documented on the remote
-  (`eb50403` design, `6072a7a` implementation plan). No visual implementation
-  or model/runtime installation has started.
+- Provider-neutral Chrome Faithful core, first-party DSH bundle, and local-first
+  visual extraction are implemented on `codex/dsh-bundle-implementation`.
+- The private remote currently remains at release baseline `5cb2209`; visual
+  commits `aad1848..3838ba2` are local until independent review and final CI.
+- Nothing has been published to npm and repository visibility was not changed.
 - DSH support targets `@deepseek-ai/dsh 0.1.0-rc.6`; revalidate composition for
   every DSH RC.
+- Agent Lessons outputs `.agent-os/` and `docs/agent-lessons.md` are private,
+  generated, untracked, and must not be staged.
 
-## Release closeout completed
+## Release and privacy closeout
 
-- Rewrote the personal email from reachable commit identities and file content,
-  removed rewrite refs, expired reflogs, pruned unreachable objects, then
-  force-updated the private remote with a lease. Local refs/reflogs and
-  `origin/main` identity/content counts are all 0.
-- Stored the pre-rewrite recovery bundle outside the repository at
-  `%LOCALAPPDATA%\AgentOS\backups\chrome-faithful-history\20260814T123100Z`.
-  Bundle SHA-256:
-  `1682b89a4670dd8d49952cb408daa2c5f9dc0480655e34d3095a2e6195171baf`.
-- Stored a second complete pre-redaction bundle at
-  `%LOCALAPPDATA%\AgentOS\backups\chrome-faithful-history\20260814T133403Z`.
-  Bundle SHA-256:
-  `4b7408baba6d0c453870bde1693b9df28e8d72da7a44a4273738d0cfe1389e67`.
-  Both backup directories have protected native ACLs limited to the current
-  Windows user and `SYSTEM`; they intentionally retain the recovery history.
+- Rewrote the personal email from reachable identities and file content,
+  removed rewrite refs, expired reflogs, pruned unreachable objects, and
+  force-updated the private remote with a lease. Local refs/reflogs and remote
+  identity/content counts are 0.
+- The two complete recovery bundles retain pre-rewrite history outside the
+  repository under
+  `%LOCALAPPDATA%\AgentOS\backups\chrome-faithful-history\20260814T123100Z`
+  and `20260814T133403Z`. Their plaintext SHA-256 values remain
+  `1682b89a4670dd8d49952cb408daa2c5f9dc0480655e34d3095a2e6195171baf`
+  and `4b7408baba6d0c453870bde1693b9df28e8d72da7a44a4273738d0cfe1389e67`.
+- Bundles, old manifests, and DSH acceptance receipts are now stored only as
+  DPAPI-CurrentUser ciphertext. Original plaintext names are absent from both
+  logical and physical LocalCache paths. Native round-trip hashes match and
+  both decrypted bundles pass Windows `git.exe bundle verify`; ciphertext,
+  envelope metadata, and timestamp directories have protected ACLs limited to
+  the current Windows user and `SYSTEM`.
+- WSL can observe the ciphertext. A same-user WSL process can deliberately
+  invoke native Windows DPAPI; this is the explicit residual boundary, not a
+  claim that ciphertext metadata is hidden.
 - Fixed WSL-launched Windows Agent Lessons discovery when inherited `PATHEXT`
-  omitted `.EXE`. The initial global backup `20260814T122443Z` did not include
-  the changed `bin\agent-lessons.ps1`, so it is not the restoration source for
-  this fix. A scoped before/after/patch backup was stored at
-  `%LOCALAPPDATA%\AgentOS\backups\agent-os-source\20260814T133650Z`; before,
-  after, and patch SHA-256 values are
-  `b5e4dadaa84ce59322ee33afae4701e49dc65f3032914cfc725d4a4e14b6ce6e`,
+  omitted `.EXE`. The initial global backup `20260814T122443Z` did not contain
+  `bin\agent-lessons.ps1`; the valid scoped before/after/patch backup is
+  `%LOCALAPPDATA%\AgentOS\backups\agent-os-source\20260814T133650Z` with
+  hashes `b5e4dadaa84ce59322ee33afae4701e49dc65f3032914cfc725d4a4e14b6ce6e`,
   `e82be3fb2f7385a1a141a3583f192e633f040a0157c3d1ccddbb4c6be8491f8c`,
   and `88b358bb5c5ac93176c3de90aed0ba771746a5048a23fff5da42bcbfa585c916`.
-  A temporary, non-mutating reconstruction produced the exact
-  after hash and byte-identical file. Fresh `validate`, `closeout`, and `stats`
-  returned `VALIDATION_PASSED`, `CLOSEOUT_COMPLETED`, and `STATS_COMPLETED`.
-- Kept Agent Lessons outputs `.agent-os/` and `docs/agent-lessons.md` untracked;
-  they are private/generated evidence and must not be staged.
-- Fixed Windows release contracts, DSH tarball isolation, PowerShell 7 ACL API
-  compatibility, and private storage ownership normalization. Exact access
-  rules remain current user plus `SYSTEM`; temporary directories owned by the
-  built-in Administrators group are normalized to the current user.
+  Non-mutating reconstruction was byte-exact; fresh `validate`, `closeout`, and
+  `stats` returned `VALIDATION_PASSED`, `CLOSEOUT_COMPLETED`, and
+  `STATS_COMPLETED`.
+- Independent release/security review returned `APPROVED` after rechecking
+  DPAPI round trips, hashes, native bundle verification, old-path absence,
+  ACLs, private visibility, remote refs, and CI.
 
-## Verification evidence
+## DSH live acceptance and release baseline
 
 - GitHub Actions run
-  `https://github.com/bpc-oss/chrome-faithful/actions/runs/31805496905` at
-  `7bc945b`: Ubuntu and Windows jobs both passed. The Windows job passed DSH
-  host/isolation, checks, parity, extension build/diff, full Node tests, and
-  installer transactions.
-- Node `v22.12.0`: 218/218 tests passed; `CHECK_OK`; parity passed with 22
-  interfaces, 135 members, and contract hash `ab80319f...`.
+  `https://github.com/bpc-oss/chrome-faithful/actions/runs/31807029760` at
+  `5cb2209` passed Ubuntu and Windows jobs, including DSH host/isolation,
+  checks, parity, extension generation/diff, full Node tests, and installer
+  transactions.
+- Disposable DSH/Chrome acceptance passed against the paired private tarballs,
+  DSH `0.1.0-rc.6`, and Chrome for Testing `152.0.7977.42`. The DPAPI-protected
+  v2 receipt has plaintext SHA-256
+  `7bedb2c95c8ebc70daf781bc5e5ecea16a99a027eb1d2e3cca1208aae3c9d88c`.
+  It records all 37 baseline tool names, fail-loud startup with 0 tools left
+  registered, and the exact DSH call
+  `mcp__chrome_faithful__chrome_profiles` with `{}` arguments resolving the
+  sole `DSH Disposable` profile to directory `Default`.
+- The cleanup receipt plaintext SHA-256 is
+  `a3ab83c341fce9caeeb3869292b5fad3167ed940a31a32dd315e3776c59f2a3e`;
+  it records the disposable root absent and 0 matching processes. Existing
+  Chrome sessions and the live port 18755 service were not used or modified.
+
+## Local vision implementation
+
+- `chrome_visual_extract` is the 38th MCP tool. It reuses one exact-profile
+  screenshot and returns text-only JSON: image dimensions/hash, OCR text,
+  confidence, and normalized coordinates; screenshot bytes, base64, local
+  paths, stderr, and raw backend errors are not returned.
+- The default OCR route is the shipped PP-OCRv5 mobile adapter. It requires
+  user-installed Python/PaddleOCR and explicit absolute local
+  `PP-OCRv5_mobile_det` and `PP-OCRv5_mobile_rec` directories. It does not
+  install packages, download weights, write screenshots, or call a remote API.
+- Optional VLM mode is disabled until `CHROME_FAITHFUL_VLM_BACKEND` is set to a
+  local CLI or explicit loopback HTTP endpoint. CLI spawning uses `shell:false`;
+  HTTP accepts only exact `http://127.0.0.1:<port>` or
+  `http://[::1]:<port>`, follows no redirects, and all transports enforce
+  request, response, timeout, text, block-count, pixel, and final-result bounds.
+- DSH forwards only six declared string environment variables. No model,
+  Python runtime, PaddleOCR dependency, or VLM weights are bundled.
+- Selected local Python status returned
+  `{"available":false,"backend":"ppocrv5-mobile","reason":"local_models_missing"}`.
+  This is `OPTIONAL_LIVE_OCR_UNVERIFIED_MISSING_DEPENDENCY`; no dependency or
+  model was installed and no cloud fallback was used.
+
+## Verification on the visual tree
+
+- Node `v22.12.0`: 256/256 full tests passed with 0 failures/skips. The focused
+  real DSH rc.6 host, package isolation, bundle, and release contracts passed
+  20/20.
+- `CHECK_OK`; parity passed with 22 interfaces, 135 members, and contract hash
+  `ab80319f...`; deterministic extension generation produced no tracked diff.
 - Windows PowerShell 5.1 and PowerShell 7 installer transaction suites both
   returned `PASS`, including apply/restore, absent target, fault rollback,
   Claude untouched, and production guard checks.
-- Disposable DSH/Chrome acceptance receipt:
-  `%LOCALAPPDATA%\AgentOS\reports\chrome-faithful\dsh-live-acceptance-20260814-v2.json`
-  (SHA-256 `7bedb2c95c8ebc70daf781bc5e5ecea16a99a027eb1d2e3cca1208aae3c9d88c`).
-  It records `PASS` against `7bc945b` with DSH
-  `0.1.0-rc.6`, Chrome for Testing `152.0.7977.42`, all 37 tool names and their
-  digest, startup failure rejection with 0 tools registered, and exact DSH call
-  `mcp__chrome_faithful__chrome_profiles` with `{}` arguments. The result found
-  the sole `DSH Disposable` profile and verified binding to directory
-  `Default`. Cleanup receipt `dsh-live-acceptance-20260814-v2-cleanup.json`
-  (SHA-256 `a3ab83c341fce9caeeb3869292b5fad3167ed940a31a32dd315e3776c59f2a3e`)
-  records the disposable root absent and 0 matching processes. Both receipts
-  have protected native ACLs limited to the current Windows user and `SYSTEM`;
-  WSL access to the primary receipt is denied.
-- Live acceptance installed paired local tarballs. Because pnpm v10 otherwise
-  tried the registry for the unpublished core child dependency, the disposable
-  profile used a temporary workspace override binding the core to its local
-  tarball. Published artifacts were not changed.
-- Existing Chrome sessions and the live port 18755 service were not used or
-  modified.
-
-## DSH local vision decision
-
-- Approved direction: default local PP-OCRv5 mobile text/coordinate extraction
-  plus a disabled-by-default local VLM adapter for SmolVLM2, Moondream, or a
-  compatible user-operated backend.
-- Design:
-  `docs/superpowers/specs/2026-08-14-dsh-local-vision-design.md`.
-- Plan: `docs/superpowers/plans/2026-08-14-dsh-local-vision.md`.
-- The core will reuse exact-profile screenshots and return bounded text-only
-  JSON because DSH rc.6 discards MCP image blocks. No cloud upload, automatic
-  model download, Python installation, or bundled weights are allowed.
-- Implementation will proceed inline in the current task unless the user asks
-  to split it into delegated work.
+- `npm audit` for the full and production-only dependency graphs returned 0
+  vulnerabilities. Dry-run package inventory contains the PP-OCR adapter and
+  visual modules but no weights or runtime dependency tree.
+- MCPB staging now copies and asserts the exact runtime PP-OCR adapter path;
+  both CI jobs build MCPB. Actual local MCPB build and runtime-path inspection
+  passed.
+- Independent visual review found and the implementation fixed: actual MCP
+  payload-size drift from pretty JSON, synchronous spawn diagnostic leakage,
+  screenshot diagnostic leakage, missing pre-base64 screenshot byte bounds,
+  incomplete timeout process cleanup, and the omitted MCPB adapter. Targeted
+  re-review returned `APPROVED` with 37/37 independent checks and no remaining
+  finding.
+- The default WSL Node is `v20.20.2`, below the declared `>=22.12.0` engine;
+  its DSH host test fails at `Promise.withResolvers`. This is an environment
+  rejection, not counted as a pass. All acceptance evidence uses Node 22.12.0.
 
 ## Remaining gates
 
-- Independent closeout re-review of the current sanitized history, scoped Agent
-  Lessons restoration evidence, v2 live receipt, and final CI remains required.
-- Vision design and plan are already remote; implementation remains a separate
-  post-closeout change.
-- GitHub Actions reports a non-failing platform annotation that pinned checkout
-  and setup-node actions still declare Node 20 metadata while GitHub forces
-  them to Node 24. Track upstream pinned releases; do not unpin actions.
+- Push only intended tracked files to the private feature branch and `main`,
+  run GitHub Actions on the resulting commit, and record the final run URL.
+- GitHub Actions may emit a non-failing annotation because pinned checkout and
+  setup-node revisions declare older Node metadata while GitHub forces Node 24.
+  Track upstream pinned releases; do not unpin actions.

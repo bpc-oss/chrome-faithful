@@ -41,7 +41,11 @@ import {
   createBackendFromEnv
 } from "./verification/index.mjs";
 import { createVisualBackend } from "./visual/backends.mjs";
-import { runVisualExtract, MAX_VISUAL_PROMPT_TEXT } from "./visual/extract.mjs";
+import {
+  runVisualExtract,
+  MAX_VISUAL_PROMPT_TEXT,
+  serializeVisualResult
+} from "./visual/extract.mjs";
 
 const config = await loadConfig();
 const router = await createResilientBridgeRouter(config);
@@ -1478,7 +1482,7 @@ server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
     }
     if (params.name === "chrome_visual_extract") {
       const tab = await (await browser(args.profileName)).tabs.get(args.tabId);
-      return textResult(await runVisualExtract({
+      const result = await runVisualExtract({
         screenshot: (options) => tab.screenshot(options),
         mode: args.mode,
         clip: args.clip,
@@ -1486,7 +1490,8 @@ server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
         prompt: args.prompt,
         ocrBackend: visualOcrBackend,
         vlmBackend: visualVlmBackend
-      }));
+      });
+      return { content: [{ type: "text", text: serializeVisualResult(result) }] };
     }
     if (params.name.startsWith("chrome_verification")) {
       const profileName = args.profileName;

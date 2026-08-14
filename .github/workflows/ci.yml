@@ -24,6 +24,7 @@ jobs:
       - run: npm run check:parity
       - run: npm run build:extension
       - run: git diff --exit-code -- extension/generated/
+      - run: npm run build:mcpb
       - run: npm test
 
   test-windows:
@@ -41,6 +42,7 @@ jobs:
       - run: npm run check:parity
       - run: npm run build:extension
       - run: git diff --exit-code -- extension/generated/
+      - run: npm run build:mcpb
       - run: npm test
       - name: Installer transaction tests
         shell: pwsh

@@ -1,6 +1,12 @@
+import { writeFileSync } from "node:fs";
+
 const mode = process.argv[2] || "ok";
 
 if (mode === "hang") {
+  setInterval(() => {}, 1_000);
+} else if (mode === "ignore-term") {
+  writeFileSync(process.argv[3], String(process.pid));
+  process.on("SIGTERM", () => {});
   setInterval(() => {}, 1_000);
 } else if (mode === "stderr-fail") {
   process.stderr.write("super-secret-backend-diagnostic");
