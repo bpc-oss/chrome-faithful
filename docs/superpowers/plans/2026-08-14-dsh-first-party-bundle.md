@@ -33,7 +33,7 @@
 - Produces: bundle export `@bpc-oss/dsh-plugin-chrome-faithful/mcp-server` mapped to `./bin/chrome-faithful-mcp.mjs`.
 - Produces: executable `chrome-faithful-mcp` mapped to the same launcher.
 
-- [ ] **Step 1: Write failing release-contract tests**
+- [x] **Step 1: Write failing release-contract tests**
 
 Add assertions that:
 
@@ -52,13 +52,13 @@ assert.deepEqual(bundle.files, ["bin/", "cordis.patch.yml", "README.md"]);
 Read the launcher and assert it imports only `chrome-faithful/mcp-server` and
 does not contain `spawn`, `exec`, `shell`, fallback paths, or exception hiding.
 
-- [ ] **Step 2: Run the focused test and confirm RED**
+- [x] **Step 2: Run the focused test and confirm RED**
 
 Run: `node --test test/release-contract.test.mjs`
 
 Expected: failure because the root export and bundle files do not exist.
 
-- [ ] **Step 3: Add the minimal package metadata and launcher**
+- [x] **Step 3: Add the minimal package metadata and launcher**
 
 Root `package.json` adds:
 
@@ -78,13 +78,13 @@ dependency. Launcher content is exactly:
 import "chrome-faithful/mcp-server";
 ```
 
-- [ ] **Step 4: Run focused tests and static checks**
+- [x] **Step 4: Run focused tests and static checks**
 
 Run: `node --test test/release-contract.test.mjs && npm run check`
 
 Expected: PASS and `CHECK_OK`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add package.json packages/dsh-plugin-chrome-faithful test/release-contract.test.mjs
@@ -104,7 +104,7 @@ git commit -m "feat: add DSH bundle package boundary"
 - Produces: `loadDshBundlePatch({ patchPath, agentosChromeConfig })` returning the evaluated MCP-client row.
 - Consumes: bundle launcher export from Task 1.
 
-- [ ] **Step 1: Write failing bundle contract tests**
+- [x] **Step 1: Write failing bundle contract tests**
 
 Tests must evaluate the YAML `!!js` expressions, not inspect strings. Assert the
 parsed row equals:
@@ -131,13 +131,13 @@ published rc.6 MCP-client configuration schema or an exact local validator
 mirroring `z.dict(z.string())`, transport discrimination, timeout, and boolean
 requirements.
 
-- [ ] **Step 2: Run the focused test and confirm RED**
+- [x] **Step 2: Run the focused test and confirm RED**
 
 Run: `node --test test/dsh-bundle-contract.test.mjs`
 
 Expected: failure because the patch and evaluator do not exist.
 
-- [ ] **Step 3: Implement the exact patch and evaluator**
+- [x] **Step 3: Implement the exact patch and evaluator**
 
 The patch uses one `insert` row and these expressions:
 
@@ -156,13 +156,13 @@ evaluates only those tagged scalar expressions in a `vm` context containing
 explicit `process` and `baseUrl`. The helper then validates the resulting fixed
 MCP-client configuration shape, including a string-only `env` dictionary.
 
-- [ ] **Step 4: Run focused tests and static checks**
+- [x] **Step 4: Run focused tests and static checks**
 
 Run: `node --test test/dsh-bundle-contract.test.mjs test/release-contract.test.mjs && npm run check`
 
 Expected: PASS and `CHECK_OK`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/dsh-plugin-chrome-faithful/cordis.patch.yml scripts/dsh-bundle-contract.mjs test/dsh-bundle-contract.test.mjs package.json package-lock.json
@@ -179,7 +179,7 @@ git commit -m "feat: compose Chrome Faithful into DSH"
 - Consumes: core and bundle package manifests/exports from Task 1.
 - Produces: platform-neutral proof that the installed bundle resolves the core without `.bin` on `PATH`.
 
-- [ ] **Step 1: Write the isolated package test**
+- [x] **Step 1: Write the isolated package test**
 
 The test creates a temporary directory and runs `npm pack --json` for the root
 and bundle. It writes a profile-like temporary `package.json` whose two direct
@@ -200,31 +200,31 @@ Spawn `process.execPath` with the absolute launcher while `PATH` excludes
 temporary path. Assert non-zero exit and the existing bounded error text
 `Agent OS Chrome CDP config is unavailable at` from `src/config.mjs`.
 
-- [ ] **Step 2: Run the focused test and confirm RED**
+- [x] **Step 2: Run the focused test and confirm RED**
 
 Run: `node --test test/dsh-package-isolation.test.mjs`
 
 Expected: failure until the packed exports and paired file installation are
 correctly exercised.
 
-- [ ] **Step 3: Make only the required packaging corrections**
+- [x] **Step 3: Make only the required packaging corrections**
 
 Correct `files`, `exports`, executable mode, or test installation mechanics.
 Do not introduce runtime fallback resolution.
 
-- [ ] **Step 4: Add the focused isolation test to both CI jobs**
+- [x] **Step 4: Add the focused isolation test to both CI jobs**
 
 Place it after `npm ci` and before the complete unit suite. It must execute on
 Ubuntu and Windows with Node 22.
 
-- [ ] **Step 5: Run the focused test twice from clean temp roots**
+- [x] **Step 5: Run the focused test twice from clean temp roots**
 
 Run: `node --test test/dsh-package-isolation.test.mjs` twice.
 
 Expected: both passes; no repository file changes outside ignored npm cache and
 temporary directories.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add test/dsh-package-isolation.test.mjs .github/workflows/ci.yml
@@ -245,7 +245,7 @@ git commit -m "test: verify isolated DSH bundle resolution"
 - Consumes: package install and namespace contracts from Tasks 1-3.
 - Produces: first-class DSH installation documentation and pack-content gates.
 
-- [ ] **Step 1: Write failing pack-content tests**
+- [x] **Step 1: Write failing pack-content tests**
 
 Use `npm pack --dry-run --json` for both package roots. Assert the bundle
 contains exactly package metadata, launcher, patch, README, and npm-generated
@@ -253,13 +253,13 @@ license material; assert neither tarball includes `test/`, `reports/`, `tmp/`,
 private config, or `docs/superpowers/`. Assert the root tarball excludes
 `packages/dsh-plugin-chrome-faithful/` so the packages remain independent.
 
-- [ ] **Step 2: Run focused tests and confirm RED**
+- [x] **Step 2: Run focused tests and confirm RED**
 
 Run: `node --test test/release-contract.test.mjs`
 
 Expected: failure because DSH docs and the bundle pack gate are absent.
 
-- [ ] **Step 3: Write DSH-first documentation**
+- [x] **Step 3: Write DSH-first documentation**
 
 Bundle README includes:
 
@@ -274,12 +274,12 @@ Bundle README includes:
 Root bilingual READMEs add DSH as a first-class quick-start before generic
 client registration while preserving all existing client paths.
 
-- [ ] **Step 4: Update package allowlists and contributing commands**
+- [x] **Step 4: Update package allowlists and contributing commands**
 
 Keep root and bundle artifacts independent. Add documented commands for the
 bundle contract and paired-tarball tests.
 
-- [ ] **Step 5: Run documentation, package, and static gates**
+- [x] **Step 5: Run documentation, package, and static gates**
 
 Run:
 
@@ -293,7 +293,7 @@ git diff --check
 
 Expected: all pass; both JSON pack inventories contain only declared files.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/dsh-plugin-chrome-faithful README.md README.zh-CN.md CONTRIBUTING.md package.json test/release-contract.test.mjs
@@ -310,7 +310,7 @@ git commit -m "docs: add first-class DSH installation"
 - Consumes: all prior task deliverables.
 - Produces: evidence-backed release-readiness state with explicit external gates.
 
-- [ ] **Step 1: Run the full Node 22 verification matrix**
+- [x] **Step 1: Run the full Node 22 verification matrix**
 
 Run under Node `>=22.12.0`:
 
@@ -329,7 +329,7 @@ node --test test/dsh-package-isolation.test.mjs
 Expected: every command passes. Record literal suite counts and artifact
 inventories; do not infer live Chrome or DSH acceptance.
 
-- [ ] **Step 2: Run Windows installer transactions**
+- [x] **Step 2: Run Windows installer transactions**
 
 Run:
 
@@ -339,18 +339,18 @@ pwsh -NoProfile -File test/installer-transactions.test.ps1
 
 Expected: all transaction tests pass, not skipped.
 
-- [ ] **Step 3: Update handoff and mark plan checkboxes accurately**
+- [x] **Step 3: Update handoff and mark plan checkboxes accurately**
 
 Record goal, commits, touched areas, commands/results, current branch, remaining
 private-history email decision, absence of live DSH/Chrome acceptance, and the
 separate authority required for push/public/npm/live-profile actions.
 
-- [ ] **Step 4: Request independent implementation review**
+- [x] **Step 4: Request independent implementation review**
 
 Reviewer inspects actual files and reruns focused evidence. Required output is
 `APPROVED` or findings with severity, path, required fix, and verification.
 
-- [ ] **Step 5: Fix or disposition every finding and re-run affected gates**
+- [x] **Step 5: Fix or disposition every finding and re-run affected gates**
 
 No critical/high finding may remain. Medium/low findings must be fixed or
 explicitly accepted as residual risk in `HANDOFF.md`.
