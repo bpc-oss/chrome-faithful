@@ -177,6 +177,8 @@ test("installer contract keeps secrets and backups outside source", async () => 
   assert.match(extensionInstaller, /Move-Item -LiteralPath \$Stage -Destination \$Destination/);
   assert.match(extensionInstaller, /Committed extension update, but rollback cleanup failed/);
   assert.match(storage, /Assert-AgentOsExactPrivateAcl/);
+  assert.match(storage, /\$security\.SetOwner\(\$currentSid\)/);
+  assert.match(storage, /\$allowed = @\(\$currentSid\.Value, \$script:SystemSid\.Value\)/);
   assert.doesNotMatch(transactionFixture, /\.Replace\(|Invoke-Expression/);
   assert.match(transactionFixture, /LocalAppDataRoot = \$isolatedLocalAppData/);
   assert.match(transactionFixture, /UserProfileRoot = \$fixtureUser/);

@@ -173,6 +173,11 @@ function Set-AgentOsExactPrivateAcl {
   } else {
     [Security.AccessControl.FileSecurity]::new()
   }
+  # GitHub-hosted Windows runners can create temporary files owned by the
+  # built-in Administrators group even though the creating process is the
+  # current user. Normalize ownership to that user as part of the same exact
+  # descriptor write; the access rules remain limited to current user + SYSTEM.
+  $security.SetOwner($currentSid)
   $security.SetAccessRuleProtection($true, $false)
   foreach ($existingRule in @($security.GetAccessRules(
     $true,
@@ -199,9 +204,9 @@ function Set-AgentOsExactPrivateAcl {
     )
     [void]$security.AddAccessRule($rule)
   }
-  # Set only the DACL. PowerShell's Set-Acl also attempts to persist security
-  # sections that can require SeSecurityPrivilege on an ordinary desktop
-  # session, even though this operation does not need that privilege.
+  # Persist the owner and DACL without PowerShell's Set-Acl path, which can
+  # also attempt security sections requiring SeSecurityPrivilege on an
+  # ordinary desktop session.
   Set-AgentOsAccessControlCompatible -Item $item -Acl $security
 
   Assert-AgentOsExactPrivateAcl -Path $Path
