@@ -40,7 +40,7 @@ Chrome Faithful 聚焦于 fail-closed 本地桥接下的精确、多 Profile 控
 ```
 ┌─────────────┐   stdio    ┌──────────────────────┐   ws://127.0.0.1    ┌─────────────────────────┐
 │ MCP 客户端   │ ─────────► │ src/mcp-server.mjs   │ ──────────────────► │ src/bridge-server.mjs   │
-│ (Claude、   │            │ MCP 工具 (37 个)      │  (Bearer 密钥)       │ 经认证的 localhost       │
+│ (Claude、   │            │ MCP 工具 (38 个)      │  (Bearer 密钥)       │ 经认证的 localhost       │
 │  Codex、…)  │            └──────────────────────┘                     │ 多 Profile 路由器        │
 └─────────────┘                                                        └───────────┬─────────────┘
                                                                                     │ chrome.debugger
@@ -54,7 +54,7 @@ Chrome Faithful 聚焦于 fail-closed 本地桥接下的精确、多 Profile 控
 - `extension/` — 在每个可控制 Profile 中加载一次的 MV3 扩展。使用 `chrome.debugger`；**offscreen 文档**持有持久 WebSocket，MV3 服务工作线程被挂起也不会断连。
 - `src/bridge-server.mjs` — 经认证、仅 localhost、带弹性故障转移的多 Profile 路由器。
 - `src/chrome-profile-launcher.mjs` — 精确本地 Profile 发现 + 普通 Chrome 启动，带限时扩展注册确认。
-- `src/mcp-server.mjs` — MCP 工具面（37 个工具）。
+- `src/mcp-server.mjs` — MCP 工具面（38 个工具）。
 - `src/agent-browser.mjs` — JavaScript `agent.browsers` 兼容适配层。
 - `src/verification/` — 挑战检测、hold 状态机、人工交接、遮罩清理、拟人输入，以及求解管线（checkbox / 滑块 / 点击优先 generic / capture 送后端）。
 - `src/file-injection.mjs`、`src/page-asset.mjs`、`src/scroll-capture.mjs`、`src/scroll-asset-capture.mjs`、`src/network-request.mjs`、`src/network-response.mjs` — 功能模块。
@@ -99,6 +99,32 @@ dsh plugin --profile web add @bpc-oss/dsh-plugin-chrome-faithful@0.4.0
 失败会中止激活，不会静默留下零工具插件。打包、信任边界和私有验收规则见
 [DSH bundle README](packages/dsh-plugin-chrome-faithful/README.md)。
 
+### 面向纯文本模型的本地视觉
+
+`chrome_visual_extract` 只在显式调用时截取所选精确 Profile 的标签页，并把
+截图交给本地后端；返回的是文字 JSON，包括截图尺寸/SHA-256、OCR 文字、
+置信度与归一化坐标，不返回也不保存 PNG。因此即使 DSH `0.1.0-rc.6` 会丢弃
+MCP image content，纯文本 DeepSeek 模型仍可获得页面视觉信息。
+
+默认后端是随包提供的 PP-OCRv5 mobile 适配器。Chrome Faithful 不捆绑、
+不安装 Python、PaddleOCR、PaddlePaddle、OpenCV、NumPy 或模型权重。用户需
+自行安装可选运行时，并显式设置两个本地模型绝对目录，避免 PaddleOCR 回退到
+自动下载权重：
+
+```text
+CHROME_FAITHFUL_PYTHON=C:\Python311\python.exe
+CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR=C:\Models\PP-OCRv5_mobile_det
+CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR=C:\Models\PP-OCRv5_mobile_rec
+```
+
+`CHROME_FAITHFUL_OCR_BACKEND` 也可设置为无 shell 的
+`cli:["executable","arg"]`，或精确的
+`http://127.0.0.1:<port>/...` / `http://[::1]:<port>/...` 回环地址。
+`CHROME_FAITHFUL_VLM_BACKEND` 使用相同格式且默认关闭，可连接用户自行运行的
+SmolVLM2、Moondream 或兼容本地适配器。远程 URL、重定向、自动下载和云端
+回退都会被拒绝。OCR 归一化坐标只是现有 `chrome_cua` 的定位提示，不构成
+点击授权。
+
 ## 快速上手（Windows）
 
 前置：Node.js >= 22.12、Chrome、PowerShell（只有安装器和 `.cmd` 启动器是 Windows 专属；扩展、桥接、MCP 服务均为平台无关）。
@@ -136,7 +162,7 @@ npm ci --ignore-scripts
 | 标签页与导航 | `chrome_tabs`、`chrome_session_v2` (finalize)、`chrome_page_event_v2` |
 | 交互 | `chrome_playwright_v2`、`chrome_locator`、`chrome_cua`、`chrome_dom_cua_v2` |
 | 原始 CDP 与网络 | `chrome_cdp`、`chrome_network_asset_v1` |
-| 采集与证据 | `chrome_screenshot`、`chrome_cua_scroll_capture_v1/v2/v3`、`chrome_cua_scroll_capture_status_v1`、`chrome_cua_scroll_asset_capture_start/status/cancel_v2` |
+| 采集与证据 | `chrome_screenshot`、`chrome_visual_extract`、`chrome_cua_scroll_capture_v1/v2/v3`、`chrome_cua_scroll_capture_status_v1`、`chrome_cua_scroll_asset_capture_start/status/cancel_v2` |
 | 资产与内容 | `chrome_page_asset`、`chrome_page_asset_v2`、`chrome_content_v2`（pdf/md/xlsx/csv/docx/pptx） |
 | 验证 | `chrome_verification_detect`、`chrome_verification_status`、`chrome_verification_resume`、`chrome_verification_solve`、`chrome_verification_solve_checkbox`、`chrome_verification_solve_slider`、`chrome_verification_capture`、`chrome_verification_dismiss_overlays` |
 | 工具类 | `chrome_file_inject`、`chrome_history`、`chrome_clipboard` |

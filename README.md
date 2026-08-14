@@ -73,7 +73,7 @@ fail-closed local bridge:
 ```
 ┌─────────────┐   stdio    ┌──────────────────────┐   ws://127.0.0.1    ┌─────────────────────────┐
 │ MCP client  │ ─────────► │ src/mcp-server.mjs   │ ──────────────────► │ src/bridge-server.mjs   │
-│ (Claude,    │            │ MCP tools (37)       │  (Bearer secret)    │ authenticated localhost  │
+│ (Claude,    │            │ MCP tools (38)       │  (Bearer secret)    │ authenticated localhost  │
 │  Codex, …)  │            └──────────────────────┘                     │ multi-profile router    │
 └─────────────┘                                                        └───────────┬─────────────┘
                                                                                     │ chrome.debugger
@@ -91,7 +91,7 @@ fail-closed local bridge:
   with resilient failover.
 - `src/chrome-profile-launcher.mjs` — exact local Profile discovery and
   ordinary Chrome startup with bounded extension-registration confirmation.
-- `src/mcp-server.mjs` — the MCP tool surface (37 tools).
+- `src/mcp-server.mjs` — the MCP tool surface (38 tools).
 - `src/agent-browser.mjs` — JavaScript `agent.browsers` compatibility adapter.
 - `src/verification/` — challenge detection, hold state machine, handoff,
   overlay dismissal, humanized input, and the solve pipeline (checkbox /
@@ -151,6 +151,35 @@ resolution failures stop activation instead of leaving a silent zero-tool
 plugin. See the [DSH bundle README](packages/dsh-plugin-chrome-faithful/README.md)
 for packaging, trust-boundary, and private-acceptance details.
 
+### Local vision for text-only models
+
+`chrome_visual_extract` captures the requested exact-profile tab only when
+called, runs a local backend, and returns text JSON containing screenshot
+dimensions/SHA-256 plus OCR text, confidence, and normalized coordinates. It
+does not return or save the PNG. This makes the result useful to DSH models
+even though DSH `0.1.0-rc.6` drops MCP image content.
+
+The default backend is the shipped PP-OCRv5 mobile adapter. Chrome Faithful
+does not bundle or install Python, PaddleOCR, PaddlePaddle, OpenCV, NumPy, or
+model weights. Install those optional components yourself and configure both
+absolute local model directories so PaddleOCR cannot fall back to downloading
+weights:
+
+```text
+CHROME_FAITHFUL_PYTHON=C:\Python311\python.exe
+CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR=C:\Models\PP-OCRv5_mobile_det
+CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR=C:\Models\PP-OCRv5_mobile_rec
+```
+
+`CHROME_FAITHFUL_OCR_BACKEND` may instead be a shell-free
+`cli:["executable","arg"]` specification or an exact
+`http://127.0.0.1:<port>/...` / `http://[::1]:<port>/...` endpoint.
+`CHROME_FAITHFUL_VLM_BACKEND` uses the same formats and is disabled by default;
+it can point to a user-operated SmolVLM2, Moondream, or compatible local
+adapter. Remote URLs, redirects, automatic downloads, and cloud fallback are
+rejected. Normalized OCR coordinates are hints for existing `chrome_cua`
+calls, not authorization to click.
+
 ## Quick start (Windows)
 
 Prerequisites: Node.js >= 22.12, Chrome, PowerShell (only the installers and the
@@ -204,7 +233,7 @@ Run them without `-Apply` first — the default is a dry-run preview.
 | Tabs & navigation | `chrome_tabs`, `chrome_session_v2` (finalize), `chrome_page_event_v2` |
 | Interaction | `chrome_playwright_v2`, `chrome_locator`, `chrome_cua`, `chrome_dom_cua_v2` |
 | Raw CDP & network | `chrome_cdp`, `chrome_network_asset_v1` |
-| Capture & evidence | `chrome_screenshot`, `chrome_cua_scroll_capture_v1/v2/v3`, `chrome_cua_scroll_capture_status_v1`, `chrome_cua_scroll_asset_capture_start/status/cancel_v2` |
+| Capture & evidence | `chrome_screenshot`, `chrome_visual_extract`, `chrome_cua_scroll_capture_v1/v2/v3`, `chrome_cua_scroll_capture_status_v1`, `chrome_cua_scroll_asset_capture_start/status/cancel_v2` |
 | Assets & content | `chrome_page_asset`, `chrome_page_asset_v2`, `chrome_content_v2` (pdf/md/xlsx/csv/docx/pptx) |
 | Verification | `chrome_verification_detect`, `chrome_verification_status`, `chrome_verification_resume`, `chrome_verification_solve`, `chrome_verification_solve_checkbox`, `chrome_verification_solve_slider`, `chrome_verification_capture`, `chrome_verification_dismiss_overlays` |
 | Utilities | `chrome_file_inject`, `chrome_history`, `chrome_clipboard` |

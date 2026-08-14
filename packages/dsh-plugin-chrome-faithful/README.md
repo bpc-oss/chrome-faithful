@@ -3,7 +3,7 @@
 First-party DeepSeek Harness (DSH) bundle for Chrome Faithful. It mounts the
 existing Chrome Faithful MCP server through DSH's official MCP client, retaining
 all exact-profile routing, authentication, redaction, and browser-control
-behavior without duplicating the 37 tools as native Cordis implementations.
+behavior without duplicating the 38 tools as native Cordis implementations.
 
 ## Compatibility
 
@@ -40,6 +40,30 @@ described in the root project README. The existing compatibility path is:
 
 Set `AGENTOS_CHROME_CONFIG` only when using a different absolute path. The
 bundle passes that variable explicitly when present and embeds no secret.
+
+For text-only DeepSeek models, `chrome_visual_extract` returns local OCR text,
+confidence, and normalized screenshot coordinates as text JSON. The default
+adapter requires a user-installed PaddleOCR runtime and explicit local
+PP-OCRv5 mobile model directories:
+
+```text
+CHROME_FAITHFUL_PYTHON=C:\Python311\python.exe
+CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR=C:\Models\PP-OCRv5_mobile_det
+CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR=C:\Models\PP-OCRv5_mobile_rec
+```
+
+The optional `CHROME_FAITHFUL_OCR_BACKEND` and
+`CHROME_FAITHFUL_VLM_BACKEND` variables accept a shell-free JSON-array CLI
+specification such as `cli:["executable","arg"]` or an exact loopback HTTP
+URL with an explicit port. The VLM path is disabled when unset. Chrome
+Faithful does not install Python packages or models, download weights, accept
+remote backend URLs, follow redirects, or fall back to a cloud service.
+
+The bundle forwards only these six defined string values:
+`AGENTOS_CHROME_CONFIG`, `CHROME_FAITHFUL_OCR_BACKEND`,
+`CHROME_FAITHFUL_PYTHON`, `CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR`,
+`CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR`, and
+`CHROME_FAITHFUL_VLM_BACKEND`.
 
 On activation, DSH exposes namespaced tools such as:
 

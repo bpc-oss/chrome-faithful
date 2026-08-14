@@ -73,6 +73,17 @@ audio URL. An operator-selected HTTP service is outside this project's local
 trust boundary and may receive challenge data or credentials. Use only a
 backend you trust and are authorized to use.
 
+The visual extraction path has a stricter local-only boundary. Its default
+PP-OCR adapter receives PNG bytes through stdin and requires explicit absolute
+local detection and recognition model directories; the project never invokes
+an installer or asks PaddleOCR to resolve model names without those paths.
+Optional OCR/VLM backends are limited to a shell-free local process or exact
+`127.0.0.1`/`::1` HTTP URL with an explicit port. Redirects and remote hosts
+are rejected. Screenshots stay in memory, while MCP results contain only
+bounded text, confidence, normalized coordinates, dimensions, and a digest.
+Any configured local process still belongs to the trusted host boundary and
+can see the screenshot supplied to it.
+
 ## Scope notes
 
 - Windows installers, DPAPI backups, and the `.cmd` launcher are

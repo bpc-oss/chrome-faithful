@@ -49,20 +49,53 @@ test("evaluates the DSH bundle row with no optional config", async () => {
   });
 });
 
-test("evaluates and validates the explicit config environment branch", async () => {
+test("evaluates and validates the allowlisted visual environment branches", async () => {
   const { loadDshBundlePatch, validateDshMcpConfig } = await loadHelper();
   const profileRoot = await makeProfileRoot();
   const configPath = path.join(profileRoot, "external-config.json");
+  const detModelPath = path.join(profileRoot, "models", "det");
+  const recModelPath = path.join(profileRoot, "models", "rec");
   const result = await loadDshBundlePatch({
     patchPath,
     baseUrl: path.join(profileRoot, "package.json"),
-    environment: { AGENTOS_CHROME_CONFIG: configPath }
+    environment: {
+      AGENTOS_CHROME_CONFIG: configPath,
+      CHROME_FAITHFUL_OCR_BACKEND: "ppocr",
+      CHROME_FAITHFUL_PYTHON: "C:\\Python311\\python.exe",
+      CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR: detModelPath,
+      CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR: recModelPath,
+      CHROME_FAITHFUL_VLM_BACKEND: "http://127.0.0.1:18080/v1",
+      UNKNOWN_VISUAL_VARIABLE: "must-not-pass"
+    }
   });
 
-  assert.deepEqual(result.config.env, { AGENTOS_CHROME_CONFIG: configPath });
+  assert.deepEqual(result.config.env, {
+    AGENTOS_CHROME_CONFIG: configPath,
+    CHROME_FAITHFUL_OCR_BACKEND: "ppocr",
+    CHROME_FAITHFUL_PYTHON: "C:\\Python311\\python.exe",
+    CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR: detModelPath,
+    CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR: recModelPath,
+    CHROME_FAITHFUL_VLM_BACKEND: "http://127.0.0.1:18080/v1"
+  });
   assert.deepEqual(validateDshMcpConfig(result.config), result.config);
   assert.throws(
     () => validateDshMcpConfig({ ...result.config, env: { AGENTOS_CHROME_CONFIG: undefined } }),
     /environment values must be strings/
   );
+});
+
+test("excludes undefined and non-string visual environment values", async () => {
+  const { loadDshBundlePatch } = await loadHelper();
+  const profileRoot = await makeProfileRoot();
+  const result = await loadDshBundlePatch({
+    patchPath,
+    baseUrl: path.join(profileRoot, "package.json"),
+    environment: {
+      CHROME_FAITHFUL_PYTHON: 311,
+      CHROME_FAITHFUL_VLM_BACKEND: undefined,
+      CHROME_FAITHFUL_OCR_BACKEND: "ppocr"
+    }
+  });
+
+  assert.deepEqual(result.config.env, { CHROME_FAITHFUL_OCR_BACKEND: "ppocr" });
 });

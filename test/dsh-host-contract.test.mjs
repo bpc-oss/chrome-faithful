@@ -28,6 +28,16 @@ async function assertFailLoudHostActivation({ explicitConfig }) {
   const tempRoot = await mkdtemp(path.join(tmpdir(), "chrome-faithful-dsh-host-"));
   const previousConfig = process.env.AGENTOS_CHROME_CONFIG;
   const previousLocalAppData = process.env.LOCALAPPDATA;
+  const visualEnvironment = {
+    CHROME_FAITHFUL_OCR_BACKEND: "ppocr",
+    CHROME_FAITHFUL_PYTHON: process.execPath,
+    CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR: path.join(tempRoot, "models", "det"),
+    CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR: path.join(tempRoot, "models", "rec"),
+    CHROME_FAITHFUL_VLM_BACKEND: "http://127.0.0.1:18080/v1"
+  };
+  const previousVisualEnvironment = Object.fromEntries(
+    Object.keys(visualEnvironment).map((key) => [key, process.env[key]])
+  );
   try {
     const profileRoot = path.join(tempRoot, "profile");
     const scopeRoot = path.join(profileRoot, "node_modules", "@bpc-oss");
@@ -37,6 +47,7 @@ async function assertFailLoudHostActivation({ explicitConfig }) {
     const configPath = path.join(profileRoot, "cordis.yml");
     await writeFile(configPath, "[]\n");
     process.env.LOCALAPPDATA = path.join(tempRoot, "isolated-localappdata");
+    Object.assign(process.env, visualEnvironment);
     if (explicitConfig) {
       process.env.AGENTOS_CHROME_CONFIG = path.join(tempRoot, "missing-config.json");
     } else {
@@ -62,6 +73,10 @@ async function assertFailLoudHostActivation({ explicitConfig }) {
     else process.env.AGENTOS_CHROME_CONFIG = previousConfig;
     if (previousLocalAppData === undefined) delete process.env.LOCALAPPDATA;
     else process.env.LOCALAPPDATA = previousLocalAppData;
+    for (const [key, value] of Object.entries(previousVisualEnvironment)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
     await rm(tempRoot, { recursive: true, force: true });
   }
 }

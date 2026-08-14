@@ -9,6 +9,6 @@
           - !!js >-
               process.getBuiltinModule('node:module').createRequire(baseUrl).resolve('@bpc-oss/dsh-plugin-chrome-faithful/mcp-server')
         env: !!js >-
-          process.env.AGENTOS_CHROME_CONFIG === undefined ? {} : { AGENTOS_CHROME_CONFIG: process.env.AGENTOS_CHROME_CONFIG }
+          Object.fromEntries(['AGENTOS_CHROME_CONFIG', 'CHROME_FAITHFUL_OCR_BACKEND', 'CHROME_FAITHFUL_PYTHON', 'CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR', 'CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR', 'CHROME_FAITHFUL_VLM_BACKEND'].flatMap((key) => typeof process.env[key] === 'string' ? [[key, process.env[key]]] : []))
         toolCallTimeoutMs: 60000
         failOnStartupError: true
