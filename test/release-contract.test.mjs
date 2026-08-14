@@ -130,6 +130,7 @@ test("DSH bundle has a stable public launcher and exact core version", async () 
   );
 
   assert.equal(rootPackage.exports["./mcp-server"], "./src/mcp-server.mjs");
+  assert.equal(rootPackage.exports["./src/*"], "./src/*");
   assert.equal(bundle.name, "@bpc-oss/dsh-plugin-chrome-faithful");
   assert.equal(bundle.version, rootPackage.version);
   assert.equal(bundle.dependencies["chrome-faithful"], rootPackage.version);
@@ -143,6 +144,19 @@ test("DSH bundle has a stable public launcher and exact core version", async () 
 
   assert.match(launcher, /^#!\/usr\/bin\/env node\nimport "chrome-faithful\/mcp-server";\n$/);
   assert.doesNotMatch(launcher, /\b(?:spawn|exec|shell|catch|fallback)\b/i);
+});
+
+test("third-party notices cover every direct package dependency", async () => {
+  const packageJson = await readJson("package.json");
+  const notices = await readFile(new URL("THIRD_PARTY_NOTICES.md", root), "utf8");
+  const directPackages = [
+    ...Object.keys(packageJson.dependencies ?? {}),
+    ...Object.keys(packageJson.devDependencies ?? {})
+  ];
+
+  for (const packageName of directPackages) {
+    assert.match(notices, new RegExp(`^## ${packageName.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}\\b`, "m"));
+  }
 });
 
 async function dryRunPack(cwd) {

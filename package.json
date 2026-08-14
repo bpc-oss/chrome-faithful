@@ -11,7 +11,8 @@
   },
   "exports": {
     ".": "./src/index.mjs",
-    "./mcp-server": "./src/mcp-server.mjs"
+    "./mcp-server": "./src/mcp-server.mjs",
+    "./src/*": "./src/*"
   },
   "repository": {
     "type": "git",
@@ -57,7 +58,7 @@
   "scripts": {
     "build:extension": "node scripts/build-extension-runtime.mjs",
     "check": "node scripts/check.mjs",
-    "check:dsh": "node --test test/dsh-bundle-contract.test.mjs",
+    "check:dsh": "node --test test/dsh-bundle-contract.test.mjs test/dsh-host-contract.test.mjs",
     "check:parity": "node scripts/check-codex-parity.mjs",
     "test": "node scripts/run-unit-tests.mjs",
     "test:dsh-package": "node --test test/dsh-package-isolation.test.mjs",
@@ -74,6 +75,8 @@
     "node": ">=22.12.0"
   },
   "devDependencies": {
+    "@deepseek-ai/dsh-app-boot": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-mcp-client": "0.1.0-rc.6",
     "esbuild": "0.28.1",
     "yaml": "2.9.0"
   }

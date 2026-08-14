@@ -58,8 +58,10 @@ test("paired tarballs resolve the bundle launcher without a .bin PATH", async (t
   const launcher = requireFromProfile.resolve(
     "@bpc-oss/dsh-plugin-chrome-faithful/mcp-server"
   );
+  const legacyCoreEntry = requireFromProfile.resolve("chrome-faithful/src/index.mjs");
   assert.equal(path.isAbsolute(launcher), true);
   assert.doesNotMatch(launcher, /node_modules[\\/]\.bin/);
+  assert.match(legacyCoreEntry, /chrome-faithful[\\/]src[\\/]index\.mjs$/);
 
   const missingConfig = path.join(tempRoot, "missing-config.json");
   const child = await run(process.execPath, [launcher], {
@@ -81,7 +83,9 @@ test("paired tarballs resolve the bundle launcher without a .bin PATH", async (t
 
 test("both CI jobs execute the DSH package isolation proof", async () => {
   const workflow = await readFile(path.join(root, ".github", "workflows", "ci.yml"), "utf8");
-  const invocations = workflow.match(/node --test test\/dsh-package-isolation\.test\.mjs/g) || [];
+  const isolationInvocations = workflow.match(/test\/dsh-package-isolation\.test\.mjs/g) || [];
+  const hostInvocations = workflow.match(/test\/dsh-host-contract\.test\.mjs/g) || [];
 
-  assert.equal(invocations.length, 2);
+  assert.equal(isolationInvocations.length, 2);
+  assert.equal(hostInvocations.length, 2);
 });

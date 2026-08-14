@@ -363,5 +363,6 @@ model, use exact profiles, and never paste your bridge secret.
 
 ## License
 
-[MIT](LICENSE). Bundled third-party code is Apache-2.0 (puppeteer-core browser
-runtime) and MIT (esbuild) — see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[MIT](LICENSE). Bundled runtime code and development-only verification tools
+retain their own MIT, Apache-2.0, or ISC terms — see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

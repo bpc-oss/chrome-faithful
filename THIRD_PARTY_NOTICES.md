@@ -43,3 +43,36 @@ Source: https://github.com/evanw/esbuild
 esbuild is a development-time build tool and is omitted from the production
 MCPB dependency install. Its generated output retains applicable legal
 comments from bundled sources.
+
+## yaml 2.9.0
+
+Copyright Eemeli Aro.
+
+Licensed under the ISC License.
+
+Source: https://github.com/eemeli/yaml
+
+yaml is used only by development-time DSH bundle contract tests and is omitted
+from the production MCPB dependency install.
+
+## @deepseek-ai/dsh-app-boot 0.1.0-rc.6
+
+Copyright (c) 2026 DeepSeek.
+
+Licensed under the MIT License.
+
+Source: https://github.com/deepseek-ai/deepseek-harness/tree/main/packages/boot/app-boot
+
+This pinned package is used only by the hermetic DSH host-contract tests and is
+omitted from the production MCPB dependency install.
+
+## @deepseek-ai/dsh-mcp-client 0.1.0-rc.6
+
+Copyright (c) 2026 DeepSeek.
+
+Licensed under the MIT License.
+
+Source: https://github.com/deepseek-ai/deepseek-harness/tree/main/packages/mcp/mcp-client
+
+This pinned package is used only by the hermetic DSH host-contract tests and is
+omitted from the production MCPB dependency install.
