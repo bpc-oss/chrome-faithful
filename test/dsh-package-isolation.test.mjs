@@ -6,11 +6,18 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmCommand = process.platform === "win32" ? process.execPath : "npm";
+const npmPrefixArgs = process.platform === "win32"
+  ? [path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js")]
+  : [];
+
+function npmFileSpec(filePath) {
+  return `file:${filePath.replaceAll("\\", "/")}`;
+}
 
 async function run(command, args, options = {}) {
   return execFileAsync(command, args, {
@@ -23,7 +30,7 @@ async function run(command, args, options = {}) {
 async function pack(source, destination) {
   const { stdout } = await run(
     npmCommand,
-    ["pack", path.resolve(root, source), "--pack-destination", destination, "--json"],
+    [...npmPrefixArgs, "pack", path.resolve(root, source), "--pack-destination", destination, "--json"],
     { cwd: root }
   );
   const result = JSON.parse(stdout);
@@ -43,14 +50,14 @@ test("paired tarballs resolve the bundle launcher without a .bin PATH", async (t
     JSON.stringify({
       private: true,
       dependencies: {
-        "chrome-faithful": pathToFileURL(coreTarball).href,
-        "@bpc-oss/dsh-plugin-chrome-faithful": pathToFileURL(bundleTarball).href
+        "chrome-faithful": npmFileSpec(coreTarball),
+        "@bpc-oss/dsh-plugin-chrome-faithful": npmFileSpec(bundleTarball)
       }
     }, null, 2) + "\n"
   );
   await run(
     npmCommand,
-    ["install", "--ignore-scripts", "--no-audit", "--no-fund"],
+    [...npmPrefixArgs, "install", "--ignore-scripts", "--no-audit", "--no-fund"],
     { cwd: profileRoot }
   );
 
