@@ -64,7 +64,14 @@ function Assert-AgentOsExactPrivateAcl {
     $missing.Count -gt 0 -or
     $invalidRule.Count -gt 0
   ) {
-    throw 'BLOCKED_PRIVATE_ACL_READBACK'
+    $diagnostic = @(
+      "rules=$($rules.Count)"
+      "owner_allowed=$($ownerSid -in $allowed)"
+      "unexpected=$($unexpected.Count)"
+      "missing=$($missing.Count)"
+      "invalid=$($invalidRule.Count)"
+    ) -join ';'
+    throw "BLOCKED_PRIVATE_ACL_READBACK:$diagnostic"
   }
 }
 
