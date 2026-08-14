@@ -4,11 +4,11 @@
 //   python -m http.server 18999 --directory scripts/verification/live-tests
 //   node scripts/verification/live-tests/cf-diagnostic-probe.mjs [profileName]
 
-import { createAgent } from "../../src/agent-browser.mjs";
-import { createResilientBridgeRouter } from "../../src/resilient-bridge.mjs";
-import { loadConfig } from "../../src/config.mjs";
-import { createTabWithNavigation } from "../../src/agent-browser.mjs";
-import { sleep } from "../../src/verification/index.mjs";
+import { createAgent } from "../../../src/agent-browser.mjs";
+import { createResilientBridgeRouter } from "../../../src/resilient-bridge.mjs";
+import { loadConfig } from "../../../src/config.mjs";
+import { createTabWithNavigation } from "../../../src/agent-browser.mjs";
+import { sleep } from "../../../src/verification/index.mjs";
 
 const URL = "http://127.0.0.1:18999/fixtures/cf-interactive-test.html";
 const WANTED_PROFILE = process.argv[2] || "";

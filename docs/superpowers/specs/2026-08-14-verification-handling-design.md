@@ -72,10 +72,16 @@ A populated challenge token with no challenge frame is reported as
 
 | Challenge type | Strategy |
 |---|---|
-| recaptcha-v2 / hcaptcha / turnstile | checkbox click + token wait (`solveCheckbox`) |
+| recaptcha-v2 / hcaptcha / turnstile | control click (provider iframe center > widget) + token wait (`solveCheckbox`) |
 | geetest / vaptcha / slider | humanized drag (`solveSlider`), optional gap from backend |
-| image-select / generic | capture image/audio, submit to backend (OCR/ASR), else handoff |
+| generic / text-signal / unknown | **click the visible challenge control first** (`clickChallengeControl`: provider iframe > "Verify you are human"/"验证"/"继续" button > challenge checkbox > widget container), wait briefly for a token, then capture/backend, then handoff |
+| image-select | capture image/audio, submit to backend (OCR/ASR), else handoff |
 | recaptcha-v3 | non-interactive: report and wait/re-detect |
+
+The click-first generic path directly covers the most common human action —
+"click once and it passes". If a token appears after the click, the challenge
+is solved; only when neither a control exists nor a token appears does the
+pipeline escalate to capture/backend/handoff.
 
 ## Backend protocol
 
@@ -124,14 +130,18 @@ profile (`scripts/verification/live-tests/`):
 | Cloudflare Turnstile demo (`demo.turnstile.workers.dev`) | Widget found and clicked; token read (`XXXX.DUMMY.TOKEN.XXXX` — the documented dummy token). No challenge iframe ever appears in the main document on this profile. |
 | Local page, always-pass test sitekey `1x00000000000000000000AA` | **`resolved: true`** — the populated token is correctly recognized as a completed widget, not a blocker. |
 | Local page, forced-interactive sitekey `3x00000000000000000000FF` | **`widget_pending_render`** — api.js loaded, `window.turnstile` API present, but the challenge iframe never renders and the token stays empty. The solver now reports this precise diagnosis instead of a misleading timeout. |
+| Local click-to-pass simulation ("Verify you are human" button that sets a token) | **`solved: true`** — detection flags the text signal, the pipeline clicks the visible verify button (`click_challenge_control`, kind `verify-button`), the token populates, and re-detection reports `resolved: true`. This is the "one click and it passes" scenario the user reported; the generic path previously handed off without ever clicking. |
 | Diagnostic probe | `.cf-turnstile` container exists (70 px tall) with only an empty hidden `cf-turnstile-response` input; `frames: []`; no shadow root. Matches the earlier documented finding that Cloudflare's handshake stalls in this environment/profile. |
 
-Live findings drove three fixes: (1) detection now distinguishes *resolved* /
+Live findings drove four fixes: (1) detection now distinguishes *resolved* /
 *pending-render* / *active provider iframe* states (pending-widget classified
 before text signals, text signals suppressed when a token is populated);
 (2) `solveCheckbox` reports `widget_pending_render` when the challenge frame
-never appears; (3) handoff carries reload-and-retry guidance for the
-pending-render state.
+never appears; (3) a new generic **click-first** path
+(`clickChallengeControl`) clicks the visible challenge control (provider
+iframe center preferred over wide container centers, "Verify you are human" /
+"验证" / "继续" buttons, challenge checkboxes) before escalating;
+(4) handoff carries reload-and-retry guidance for the pending-render state.
 
 ## Known limits and follow-ups
 

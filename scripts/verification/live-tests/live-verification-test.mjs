@@ -6,11 +6,11 @@
 //
 // Defaults: Cloudflare Turnstile demo page; first online profile.
 
-import { createAgent } from "../../src/agent-browser.mjs";
-import { createResilientBridgeRouter } from "../../src/resilient-bridge.mjs";
-import { loadConfig } from "../../src/config.mjs";
-import { createTabWithNavigation } from "../../src/agent-browser.mjs";
-import { detectChallenge, solveCheckbox, captureChallengeAssets, runSolvePipeline, sleep } from "../../src/verification/index.mjs";
+import { createAgent } from "../../../src/agent-browser.mjs";
+import { createResilientBridgeRouter } from "../../../src/resilient-bridge.mjs";
+import { loadConfig } from "../../../src/config.mjs";
+import { createTabWithNavigation } from "../../../src/agent-browser.mjs";
+import { detectChallenge, solveCheckbox, captureChallengeAssets, runSolvePipeline, sleep } from "../../../src/verification/index.mjs";
 import { writeFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 

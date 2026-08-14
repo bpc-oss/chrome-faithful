@@ -5,12 +5,20 @@
 // backend.
 
 import { solveCheckbox } from "./solvers/checkbox.mjs";
+import { clickChallengeControl } from "./solvers/controls.mjs";
 import { solveSlider, SLIDER_VERIFY_DEFAULT } from "./solvers/slider.mjs";
 import { captureChallengeAssets } from "./solvers/capture.mjs";
-import { waitForChallengeCleared } from "./wait.mjs";
+import { waitForChallengeCleared, pollUntil } from "./wait.mjs";
 
 const CHECKBOX_TYPES = new Set(["recaptcha-v2", "hcaptcha", "turnstile"]);
 const SLIDER_TYPES = new Set(["geetest", "slider", "vaptcha"]);
+const TOKEN_AFTER_CLICK_MIN = 10;
+
+const TOKEN_READ = `(() => {
+  const inputs = [...document.querySelectorAll("input[name*='-response'], textarea.g-recaptcha-response, input[name*='captcha']")];
+  const values = inputs.map((el) => el.value || "").filter((v) => v.length > 0);
+  return values[0] || "";
+})()`;
 
 export async function runSolvePipeline({
   challenge,
@@ -59,19 +67,42 @@ export async function runSolvePipeline({
     });
     steps.push({ action: "solve_slider", gapDetected: gap, ...outcome });
   } else {
-    // image-select / generic: capture for a backend OCR answer, else handoff.
-    const capture = await captureChallengeAssets({ evaluate, screenshot, savePath });
-    let answer = null;
-    if (backend && capture.image?.path && typeof backend.solveImage === "function") {
+    // Generic / text-signal / unknown challenges: many pass with a single
+    // click (checkbox iframe, "Verify you are human" button, challenge
+    // checkbox). Try the obvious click first, wait briefly for a token, and
+    // only then fall back to capture/handoff.
+    const control = await clickChallengeControl({ evaluate, click });
+    steps.push({ action: "click_challenge_control", ...control });
+    let token = null;
+    if (control.clicked) {
       try {
-        const result = await backend.solveImage({ imagePath: capture.image.path });
-        answer = result?.text ?? result?.answer ?? null;
+        token = await pollUntil({
+          fn: () => evaluate(TOKEN_READ),
+          predicate: (value) => typeof value === "string" && value.length >= TOKEN_AFTER_CLICK_MIN,
+          timeoutMs: Math.min(15000, Number(timeoutMs) || 20000),
+          intervalMs: 700,
+          label: "token after control click"
+        });
       } catch {
-        answer = null;
+        token = null;
       }
     }
-    steps.push({ action: "capture", capture: { image: capture.image?.path ?? null, audioUrl: capture.audioSrc ?? capture.audioLink ?? null }, answer });
-    outcome = { solved: false, reason: answer ? "captured_for_backend" : "requires_handoff", answer };
+    if (token) {
+      outcome = { solved: true, tokenPrefix: token.slice(0, 24), tokenLength: token.length };
+    } else {
+      const capture = await captureChallengeAssets({ evaluate, screenshot, savePath });
+      let answer = null;
+      if (backend && capture.image?.path && typeof backend.solveImage === "function") {
+        try {
+          const result = await backend.solveImage({ imagePath: capture.image.path });
+          answer = result?.text ?? result?.answer ?? null;
+        } catch {
+          answer = null;
+        }
+      }
+      steps.push({ action: "capture", capture: { image: capture.image?.path ?? null, audioUrl: capture.audioSrc ?? capture.audioLink ?? null }, answer });
+      outcome = { solved: false, reason: answer ? "captured_for_backend" : "requires_handoff", answer };
+    }
   }
 
   let cleared = null;

@@ -4,6 +4,9 @@
 // Mirrors the revenue-trial `_wait_for_turnstile_token` approach.
 
 import { pollUntil } from "../wait.mjs";
+import { clickChallengeControl, CLICKABLE_CONTROL_EXPRESSION } from "./controls.mjs";
+
+export { CLICKABLE_CONTROL_EXPRESSION };
 
 export const CHECKBOX_LOCATE_EXPRESSION = `(() => {
   const visible = (el) => {
@@ -47,9 +50,8 @@ export const WIDGET_STATE_EXPRESSION = `(() => {
 })()`;
 
 export async function solveCheckbox({ evaluate, click, tokenMinLength = 20, timeoutMs = 20000 }) {
-  const box = await evaluate(CHECKBOX_LOCATE_EXPRESSION);
-  if (!box) return { solved: false, reason: "checkbox_not_found" };
-  await click({ x: box.x, y: box.y, kind: box.kind });
+  const control = await clickChallengeControl({ evaluate, click });
+  if (!control.clicked) return { solved: false, reason: control.reason || "checkbox_not_found" };
   let token = null;
   try {
     token = await pollUntil({
@@ -70,9 +72,9 @@ export async function solveCheckbox({ evaluate, click, tokenMinLength = 20, time
       state = null;
     }
     if (state && !state.hasIframe && !state.tokenPopulated) {
-      return { solved: false, reason: "widget_pending_render", widget: box.kind, widgetClass: state.widgetClass, error: error.message };
+      return { solved: false, reason: "widget_pending_render", widget: control.kind, widgetClass: state.widgetClass, error: error.message };
     }
-    return { solved: false, reason: "token_timeout", widget: box.kind, error: error.message };
+    return { solved: false, reason: "token_timeout", widget: control.kind, error: error.message };
   }
-  return { solved: true, widget: box.kind, tokenPrefix: token.slice(0, 24), tokenLength: token.length };
+  return { solved: true, widget: control.kind, tokenPrefix: token.slice(0, 24), tokenLength: token.length };
 }

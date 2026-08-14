@@ -6,6 +6,7 @@ export { bezierPath, addJitter, clampMonotonicX, dragDelays, humanizeDrag, mulbe
 export { pollUntil, waitForChallengeCleared, PollTimeoutError, sleep } from "./wait.mjs";
 export { solveSlider, SLIDER_LOCATE_EXPRESSION, SLIDER_VERIFY_DEFAULT } from "./solvers/slider.mjs";
 export { solveCheckbox, CHECKBOX_LOCATE_EXPRESSION, TOKEN_READ_EXPRESSION } from "./solvers/checkbox.mjs";
+export { clickChallengeControl, CLICKABLE_CONTROL_EXPRESSION } from "./solvers/controls.mjs";
 export { captureChallengeAssets, CHALLENGE_ASSET_EXPRESSION } from "./solvers/capture.mjs";
 export { CliBackend, HttpBackend, createBackend, createBackendFromEnv, SolverBackendError } from "./solvers/backends.mjs";
 export { runSolvePipeline } from "./solve.mjs";

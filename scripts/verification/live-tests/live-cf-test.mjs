@@ -6,17 +6,18 @@
 //   python -m http.server 18999 --directory scripts/verification/live-tests
 //   node scripts/verification/live-tests/live-cf-test.mjs [profileName]
 
-import { createAgent } from "../../src/agent-browser.mjs";
-import { createResilientBridgeRouter } from "../../src/resilient-bridge.mjs";
-import { loadConfig } from "../../src/config.mjs";
-import { createTabWithNavigation } from "../../src/agent-browser.mjs";
-import { detectChallenge, solveCheckbox, captureChallengeAssets, runSolvePipeline, sleep } from "../../src/verification/index.mjs";
+import { createAgent } from "../../../src/agent-browser.mjs";
+import { createResilientBridgeRouter } from "../../../src/resilient-bridge.mjs";
+import { loadConfig } from "../../../src/config.mjs";
+import { createTabWithNavigation } from "../../../src/agent-browser.mjs";
+import { detectChallenge, solveCheckbox, captureChallengeAssets, runSolvePipeline, sleep } from "../../../src/verification/index.mjs";
 import { writeFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
 const BASE = "http://127.0.0.1:18999";
 const PASS_PAGE = `${BASE}/fixtures/cf-pass-test.html`;
 const INTERACTIVE_PAGE = `${BASE}/fixtures/cf-interactive-test.html`;
+const CLICK_PASS_PAGE = `${BASE}/fixtures/cf-click-pass-sim.html`;
 const WANTED_PROFILE = process.argv[2] || "";
 const EVIDENCE_ROOT = resolve("scripts", "verification", "live-tests", "evidence");
 
@@ -88,6 +89,7 @@ async function runPage(name, url, pathTag) {
 try {
   await runPage("PASS", PASS_PAGE, "pass");
   await runPage("INTERACTIVE", INTERACTIVE_PAGE, "interactive");
+  await runPage("CLICK_PASS", CLICK_PASS_PAGE, "click-pass");
 } finally {
   await router.close();
 }

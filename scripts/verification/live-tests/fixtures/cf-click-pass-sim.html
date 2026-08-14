@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Click-to-pass simulation</title>
+</head>
+<body>
+<h1>Click-to-pass simulation</h1>
+<p>Clicking the verify button populates a token, simulating a pass-on-click
+challenge (the most common verification a human solves with one click).</p>
+<button id="verify" onclick="document.getElementById('cf-turnstile-response').value = 'TOKENSIM-' + Date.now(); this.textContent = 'Verified'; this.disabled = true;">Verify you are human</button>
+<input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response">
+</body>
+</html>

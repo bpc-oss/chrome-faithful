@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { solveSlider } from "../src/verification/solvers/slider.mjs";
 import { solveCheckbox, CHECKBOX_LOCATE_EXPRESSION, TOKEN_READ_EXPRESSION } from "../src/verification/solvers/checkbox.mjs";
+import { clickChallengeControl } from "../src/verification/solvers/controls.mjs";
 import { captureChallengeAssets } from "../src/verification/solvers/capture.mjs";
 import { runSolvePipeline } from "../src/verification/solve.mjs";
 
@@ -49,13 +50,14 @@ test("solveSlider reports not-found cleanly", async () => {
   assert.equal(result.reason, "slider_not_found");
 });
 
-test("solveCheckbox clicks the widget and polls for a token", async () => {
+test("solveCheckbox clicks the challenge control and polls for a token", async () => {
   let tokenValue = "";
   const clicks = [];
   const result = await solveCheckbox({
     evaluate: async (expression) => {
-      if (expression === CHECKBOX_LOCATE_EXPRESSION) return { x: 300, y: 200, kind: "widget" };
-      if (expression === TOKEN_READ_EXPRESSION) return tokenValue;
+      const source = String(expression);
+      if (source.includes("input[name")) return tokenValue; // TOKEN_READ_EXPRESSION
+      if (source.includes("provider-frame")) return { x: 300, y: 200, kind: "provider-frame" }; // CLICKABLE_CONTROL_EXPRESSION
       return null;
     },
     click: async ({ x, y }) => {
@@ -66,16 +68,19 @@ test("solveCheckbox clicks the widget and polls for a token", async () => {
   });
   assert.equal(result.solved, true);
   assert.equal(clicks.length, 1);
+  assert.deepEqual(clicks[0], { x: 300, y: 200 });
   assert.equal(result.tokenLength, 60);
+  assert.equal(result.widget, "provider-frame");
 });
 
 test("solveCheckbox reports widget_pending_render when the challenge frame never appears", async () => {
   const result = await solveCheckbox({
     evaluate: async (expression) => {
       const source = String(expression);
-      if (source.includes("rc-anchor")) return { x: 1, y: 1, kind: "widget" }; // CHECKBOX_LOCATE_EXPRESSION
       if (source.includes("hasIframe")) return { hasIframe: false, tokenPopulated: false, widgetClass: "cf-turnstile" }; // WIDGET_STATE_EXPRESSION
-      return ""; // TOKEN_READ_EXPRESSION
+      if (source.includes("input[name")) return ""; // TOKEN_READ_EXPRESSION
+      if (source.includes("provider-frame")) return { x: 1, y: 1, kind: "widget-container" }; // CLICKABLE_CONTROL_EXPRESSION
+      return null;
     },
     click: async () => {},
     timeoutMs: 1200
@@ -85,17 +90,25 @@ test("solveCheckbox reports widget_pending_render when the challenge frame never
   assert.equal(result.widgetClass, "cf-turnstile");
 });
 
-test("solveCheckbox times out when no token appears", async () => {
+test("solveCheckbox times out when no token appears and the widget state is unknown", async () => {
   const result = await solveCheckbox({
     evaluate: async (expression) => {
-      if (expression === CHECKBOX_LOCATE_EXPRESSION) return { x: 1, y: 1, kind: "widget" };
-      return "";
+      const source = String(expression);
+      if (source.includes("input[name")) return "";
+      if (source.includes("provider-frame")) return { x: 1, y: 1, kind: "provider-frame" };
+      return null; // WIDGET_STATE_EXPRESSION -> unknown state
     },
     click: async () => {},
     timeoutMs: 1200
   });
   assert.equal(result.solved, false);
   assert.equal(result.reason, "token_timeout");
+});
+
+test("clickChallengeControl returns no_clickable_control when nothing matches", async () => {
+  const result = await clickChallengeControl({ evaluate: async () => null, click: async () => {} });
+  assert.equal(result.clicked, false);
+  assert.equal(result.reason, "no_clickable_control");
 });
 
 test("captureChallengeAssets returns image path and audio URL", async () => {
@@ -123,7 +136,7 @@ test("runSolvePipeline solves a checkbox challenge and clears the hold state", a
     evaluate: async (expression) => {
       const source = String(expression);
       if (source.includes("input[name")) return token; // TOKEN_READ_EXPRESSION
-      if (source.includes("rc-anchor")) return { x: 300, y: 200, kind: "widget" }; // CHECKBOX_LOCATE_EXPRESSION
+      if (source.includes("provider-frame")) return { x: 300, y: 200, kind: "provider-frame" }; // CLICKABLE_CONTROL_EXPRESSION
       return null;
     },
     click: async () => { token = "t".repeat(40); },
@@ -136,6 +149,29 @@ test("runSolvePipeline solves a checkbox challenge and clears the hold state", a
   assert.equal(result.type, "turnstile");
 });
 
+test("runSolvePipeline clicks a generic verify button and solves click-to-pass challenges", async () => {
+  let token = "";
+  const challenge = { type: "generic", provider: "text-signal", interactive: true };
+  const result = await runSolvePipeline({
+    challenge,
+    evaluate: async (expression) => {
+      const source = String(expression);
+      if (source.includes("input[name")) return token;
+      if (source.includes("provider-frame")) return { x: 200, y: 150, kind: "verify-button" };
+      return null;
+    },
+    click: async () => { token = "TOKENSIM-1234567890"; },
+    drag: async () => {},
+    screenshot: async () => ({ savedPath: null, bytes: 0 }),
+    timeoutMs: 5000,
+    verifyCleared: false
+  });
+  assert.equal(result.solved, true);
+  assert.equal(result.steps[0].action, "click_challenge_control");
+  assert.equal(result.steps[0].kind, "verify-button");
+  assert.equal(result.tokenLength, 19);
+});
+
 test("runSolvePipeline captures generic challenges for a backend answer", async () => {
   const challenge = { type: "image-select", provider: "generic", interactive: true };
   const backend = {
@@ -143,13 +179,16 @@ test("runSolvePipeline captures generic challenges for a backend answer", async 
   };
   const result = await runSolvePipeline({
     challenge,
-    evaluate: async () => ({
-      audioSrc: null,
-      audioLink: null,
-      hasImageChallenge: true,
-      containerRect: { x: 0, y: 0, width: 200, height: 150 },
-      pageHasChallenge: true
-    }),
+    evaluate: async (expression) => {
+      if (String(expression).includes("provider-frame")) return null; // no clickable control
+      return {
+        audioSrc: null,
+        audioLink: null,
+        hasImageChallenge: true,
+        containerRect: { x: 0, y: 0, width: 200, height: 150 },
+        pageHasChallenge: true
+      };
+    },
     click: async () => {},
     drag: async () => {},
     screenshot: async ({ savePath }) => ({ savedPath: savePath, bytes: 55 }),
@@ -158,5 +197,5 @@ test("runSolvePipeline captures generic challenges for a backend answer", async 
     timeoutMs: 2000
   });
   assert.equal(result.answer, "58321");
-  assert.equal(result.steps[0].action, "capture");
+  assert.ok(result.steps.some((step) => step.action === "capture"));
 });
