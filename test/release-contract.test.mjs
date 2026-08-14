@@ -72,6 +72,9 @@ test("MCPB declares every server tool exactly once", async () => {
     .sort();
   const declaredTools = mcpb.tools.map((tool) => tool.name).sort();
 
+  assert.equal(serverTools.length, 38);
+  assert.equal(serverTools.includes("chrome_visual_extract"), true);
+  assert.equal(new Set(declaredTools).size, declaredTools.length);
   assert.deepEqual(declaredTools, serverTools);
 });
 

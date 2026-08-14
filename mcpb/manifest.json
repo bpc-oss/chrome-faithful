@@ -140,6 +140,10 @@
       "description": "Capture a tab screenshot as PNG."
     },
     {
+      "name": "chrome_visual_extract",
+      "description": "Extract bounded local OCR text and coordinates, with optional local VLM semantics."
+    },
+    {
       "name": "chrome_verification_detect",
       "description": "Detect and classify human-verification challenges in one exact profile tab."
     },

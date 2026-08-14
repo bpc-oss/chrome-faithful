@@ -82,8 +82,20 @@ test("HTTP backend rejects non-loopback, TLS, userinfo, and missing ports", () =
 });
 
 test("HTTP backend accepts exact IPv4 and IPv6 loopback URLs", () => {
-  assert.equal(createVisualBackend("http://127.0.0.1:8000/v1").url.hostname, "127.0.0.1");
-  assert.equal(createVisualBackend("http://[::1]:8000/v1").url.hostname, "[::1]");
+  const ipv4 = createVisualBackend("http://127.0.0.1:8000/v1");
+  const ipv6 = createVisualBackend("http://[::1]:8000/v1");
+  assert.equal(ipv4.url.hostname, "127.0.0.1");
+  assert.equal(ipv6.url.hostname, "[::1]");
+  assert.equal(ipv4.kind, "loopback-http");
+  assert.equal(ipv6.kind, "loopback-http");
+});
+
+test("PP-OCR backend exposes its bounded local kind", () => {
+  const backend = createVisualBackend("ppocr", {
+    ppocrCommand: process.execPath,
+    ppocrArgs: [fixturePath]
+  });
+  assert.equal(backend.kind, "ppocrv5-mobile");
 });
 
 test("HTTP backend posts JSON and parses a bounded response", async () => {

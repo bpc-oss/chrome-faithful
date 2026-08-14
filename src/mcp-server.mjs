@@ -4,6 +4,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID, createHash } from "node:crypto";
 import { dirname, isAbsolute } from "node:path";
+import { fileURLToPath } from "node:url";
 import { readFile } from "node:fs/promises";
 import { loadConfig } from "./config.mjs";
 import { createAgent, createTabWithNavigation } from "./agent-browser.mjs";
@@ -39,6 +40,8 @@ import {
   VerificationHold,
   createBackendFromEnv
 } from "./verification/index.mjs";
+import { createVisualBackend } from "./visual/backends.mjs";
+import { runVisualExtract, MAX_VISUAL_PROMPT_TEXT } from "./visual/extract.mjs";
 
 const config = await loadConfig();
 const router = await createResilientBridgeRouter(config);
@@ -49,6 +52,16 @@ const scrollCaptureJobs = new Map();
 const activeAssetCapturePromises = new Map();
 const verification = new VerificationHold();
 const verificationBackend = createBackendFromEnv(process.env.AGENTOS_VERIFICATION_BACKEND);
+const ppocrAdapterPath = fileURLToPath(new URL("../integrations/ppocr/ppocrv5_mobile.py", import.meta.url));
+const visualOcrBackend = createVisualBackend(
+  process.env.CHROME_FAITHFUL_OCR_BACKEND || "ppocr",
+  {
+    ppocrCommand: process.env.CHROME_FAITHFUL_PYTHON
+      || (process.platform === "win32" ? "python.exe" : "python3"),
+    ppocrArgs: [ppocrAdapterPath]
+  }
+);
+const visualVlmBackend = createVisualBackend(process.env.CHROME_FAITHFUL_VLM_BACKEND);
 const IMPLEMENTATION_VERSION = "0.4.0+codex.20260801130514";
 const NETWORK_BODY_RETRY_ERRORS = /(?:No data found|evicted from inspector cache|resource with given identifier)/i;
 
@@ -688,6 +701,33 @@ const schemas = [
           type: "string",
           description: "Optional absolute local .png path. Parent directories are created automatically."
         }
+      },
+      required: ["profileName", "tabId"],
+      additionalProperties: false
+    }
+  },
+  {
+    name: "chrome_visual_extract",
+    description: "Capture one exact-profile tab and return bounded local OCR text with normalized coordinates, optionally adding a description from an explicitly configured local VLM. Returns text JSON only; never returns or saves screenshot bytes.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        profileName: { type: "string", minLength: 1 },
+        tabId: { type: ["string", "number"] },
+        mode: { enum: ["ocr", "semantic", "both"], default: "ocr" },
+        fullPage: { type: "boolean", default: false },
+        clip: {
+          type: "object",
+          properties: {
+            x: { type: "number", minimum: 0 },
+            y: { type: "number", minimum: 0 },
+            width: { type: "number", exclusiveMinimum: 0 },
+            height: { type: "number", exclusiveMinimum: 0 }
+          },
+          required: ["x", "y", "width", "height"],
+          additionalProperties: false
+        },
+        prompt: { type: "string", maxLength: MAX_VISUAL_PROMPT_TEXT }
       },
       required: ["profileName", "tabId"],
       additionalProperties: false
@@ -1435,6 +1475,18 @@ server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
       }
       content.push({ type: "image", mimeType: "image/png", data: png.toString("base64") });
       return { content };
+    }
+    if (params.name === "chrome_visual_extract") {
+      const tab = await (await browser(args.profileName)).tabs.get(args.tabId);
+      return textResult(await runVisualExtract({
+        screenshot: (options) => tab.screenshot(options),
+        mode: args.mode,
+        clip: args.clip,
+        fullPage: args.fullPage,
+        prompt: args.prompt,
+        ocrBackend: visualOcrBackend,
+        vlmBackend: visualVlmBackend
+      }));
     }
     if (params.name.startsWith("chrome_verification")) {
       const profileName = args.profileName;

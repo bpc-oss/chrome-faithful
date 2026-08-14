@@ -43,10 +43,11 @@ function parseResponse(bytes) {
 }
 
 class CliVisualBackend {
-  constructor(command, args, options) {
+  constructor(command, args, options, kind = "local-cli") {
     this.command = command;
     this.args = args;
     this.shell = false;
+    this.kind = kind;
     this.timeoutMs = boundedPositiveInteger(
       options.timeoutMs,
       DEFAULT_VISUAL_BACKEND_TIMEOUT_MS,
@@ -125,6 +126,7 @@ class CliVisualBackend {
 class HttpVisualBackend {
   constructor(url, options) {
     this.url = url;
+    this.kind = "loopback-http";
     this.timeoutMs = boundedPositiveInteger(
       options.timeoutMs,
       DEFAULT_VISUAL_BACKEND_TIMEOUT_MS,
@@ -236,7 +238,7 @@ export function createVisualBackend(spec, options = {}) {
     if (typeof command !== "string" || !command || !Array.isArray(args)) {
       throw new VisualBackendError("PP-OCR backend requires a configured local adapter");
     }
-    return new CliVisualBackend(command, args, options);
+    return new CliVisualBackend(command, args, options, "ppocrv5-mobile");
   }
   if (spec.startsWith("cli:")) {
     const [command, ...args] = parseCliSpec(spec);
