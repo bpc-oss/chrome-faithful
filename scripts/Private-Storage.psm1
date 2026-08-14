@@ -33,7 +33,11 @@ function Assert-AgentOsExactPrivateAcl {
   $ownerSid = $verified.GetOwner(
     [Security.Principal.SecurityIdentifier]
   ).Value
-  $rules = @($verified.Access)
+  $rules = @($verified.GetAccessRules(
+    $true,
+    $false,
+    [Security.Principal.SecurityIdentifier]
+  ))
   $actual = @($rules | ForEach-Object {
     $_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value
   } | Sort-Object -Unique)
@@ -128,21 +132,23 @@ function Set-AgentOsAccessControlCompatible {
     [Parameter(Mandatory)]$Acl
   )
 
+  $rawItem = $Item.PSObject.BaseObject
+  $rawAcl = $Acl.PSObject.BaseObject
   $extensions = 'System.IO.FileSystemAclExtensions' -as [type]
   if ($null -eq $extensions) {
-    $Item.SetAccessControl($Acl)
+    $rawItem.SetAccessControl($rawAcl)
     return
   }
   $method = @($extensions.GetMethods() | Where-Object {
     $_.Name -eq 'SetAccessControl' -and
     $_.GetParameters().Count -eq 2 -and
-    $_.GetParameters()[0].ParameterType.IsAssignableFrom($Item.GetType()) -and
-    $_.GetParameters()[1].ParameterType.IsAssignableFrom($Acl.GetType())
+    $_.GetParameters()[0].ParameterType.IsAssignableFrom($rawItem.GetType()) -and
+    $_.GetParameters()[1].ParameterType.IsAssignableFrom($rawAcl.GetType())
   } | Select-Object -First 1)
   if ($method.Count -ne 1) {
     throw 'BLOCKED_PRIVATE_ACL_API_UNAVAILABLE'
   }
-  [void]$method[0].Invoke($null, @($Item, $Acl))
+  [void]$method[0].Invoke($null, [object[]]@($rawItem, $rawAcl))
 }
 
 function Set-AgentOsExactPrivateAcl {
@@ -161,7 +167,11 @@ function Set-AgentOsExactPrivateAcl {
     [Security.AccessControl.FileSecurity]::new()
   }
   $security.SetAccessRuleProtection($true, $false)
-  foreach ($existingRule in @($security.Access)) {
+  foreach ($existingRule in @($security.GetAccessRules(
+    $true,
+    $true,
+    [Security.Principal.SecurityIdentifier]
+  ))) {
     [void]$security.RemoveAccessRuleSpecific($existingRule)
   }
   if ($item.PSIsContainer) {
