@@ -87,8 +87,17 @@ bridge configuration and installer schema remain stable:
   adapter through the configured/default Python command; `cli:...` or an exact
   loopback URL selects another local OCR backend;
 - `CHROME_FAITHFUL_PYTHON`: optional Python executable for the shipped adapter;
+- `CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR`: required absolute local directory for
+  the `PP-OCRv5_mobile_det` inference model;
+- `CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR`: required absolute local directory for
+  the `PP-OCRv5_mobile_rec` inference model;
 - `CHROME_FAITHFUL_VLM_BACKEND`: absent means disabled; `cli:...` or an exact
   loopback URL enables semantic extraction.
+
+Both PP-OCR model directories are passed explicitly to PaddleOCR. The adapter
+fails closed before constructing the pipeline when either directory is absent,
+so PaddleOCR never receives a model-name-only request that could download
+weights automatically.
 
 The DSH bundle passes through only these named variables when present. It does
 not copy the whole parent environment.
@@ -128,7 +137,7 @@ Automated tests must prove:
    `fullPage`, defaults to viewport OCR, and returns text-only content.
 6. Semantic extraction is unavailable until explicitly configured; `both`
    reports a bounded partial result if OCR succeeds and the VLM stage fails.
-7. The DSH patch evaluates all four pass-through branches and keeps string-only
+7. The DSH patch evaluates all six pass-through branches and keeps string-only
    environment values.
 8. Release manifests, tool inventories, package allowlists, bilingual docs,
    and third-party disclosures stay synchronized.

@@ -38,6 +38,7 @@
     "config/local.example.json",
     "docs/CODEX_PARITY.md",
     "extension/",
+    "integrations/ppocr/",
     "mcpb/",
     "scripts/Install-AgentOsChromeCdp.ps1",
     "scripts/Install-AgentOsChromeExtension.ps1",

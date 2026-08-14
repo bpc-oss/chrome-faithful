@@ -66,6 +66,19 @@ Source: https://github.com/deepseek-ai/deepseek-harness/tree/47f943859bef60e4160
 This pinned package is used only by the hermetic DSH host-contract tests and is
 omitted from the production MCPB dependency install.
 
+## Optional PaddleOCR / PP-OCRv5 integration
+
+Copyright PaddlePaddle Authors.
+
+PaddleOCR source code is licensed under the Apache License, Version 2.0.
+
+Source: https://github.com/PaddlePaddle/PaddleOCR
+
+Chrome Faithful includes only its own protocol adapter. PaddleOCR,
+PaddlePaddle, OpenCV, NumPy, Python environments, and PP-OCR model artifacts
+are not dependencies or redistributed files. Users install and license those
+optional components separately.
+
 ## @deepseek-ai/dsh-mcp-client 0.1.0-rc.6
 
 Copyright (c) 2026 DeepSeek.

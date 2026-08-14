@@ -332,7 +332,7 @@ git commit -m "feat: expose local visual extraction tool"
 - Modify: `SECURITY.md`
 
 **Interfaces:**
-- Consumes: the three named visual environment variables.
+- Consumes: the five named visual environment variables.
 - Produces: a DSH MCP client `config.env` object containing only defined,
   string-valued allowlisted variables.
 
@@ -341,9 +341,13 @@ git commit -m "feat: expose local visual extraction tool"
 ```js
 assert.deepEqual(evaluateEnv({
   CHROME_FAITHFUL_PYTHON: "C:\\\\Python311\\\\python.exe",
+  CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR: "C:\\\\Models\\\\PP-OCRv5_mobile_det",
+  CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR: "C:\\\\Models\\\\PP-OCRv5_mobile_rec",
   CHROME_FAITHFUL_VLM_BACKEND: "http://127.0.0.1:18080/v1"
 }), {
   CHROME_FAITHFUL_PYTHON: "C:\\\\Python311\\\\python.exe",
+  CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR: "C:\\\\Models\\\\PP-OCRv5_mobile_det",
+  CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR: "C:\\\\Models\\\\PP-OCRv5_mobile_rec",
   CHROME_FAITHFUL_VLM_BACKEND: "http://127.0.0.1:18080/v1"
 });
 ```
@@ -361,7 +365,7 @@ Expected: FAIL because the bundle does not pass the visual variables.
 - [ ] **Step 3: Update the allowlisted environment expression**
 
 ```yaml
-env: !!js "Object.fromEntries(['AGENTOS_CHROME_CONFIG', 'CHROME_FAITHFUL_OCR_BACKEND', 'CHROME_FAITHFUL_PYTHON', 'CHROME_FAITHFUL_VLM_BACKEND'].flatMap((key) => typeof process.env[key] === 'string' ? [[key, process.env[key]]] : []))"
+env: !!js "Object.fromEntries(['AGENTOS_CHROME_CONFIG', 'CHROME_FAITHFUL_OCR_BACKEND', 'CHROME_FAITHFUL_PYTHON', 'CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR', 'CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR', 'CHROME_FAITHFUL_VLM_BACKEND'].flatMap((key) => typeof process.env[key] === 'string' ? [[key, process.env[key]]] : []))"
 ```
 
 Document PP-OCR prerequisites, local-only backend formats, text-only DSH

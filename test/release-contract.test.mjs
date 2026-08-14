@@ -95,6 +95,7 @@ test("npm package uses an explicit runtime allowlist", async () => {
   assert.ok(packageJson.files.includes("extension/"));
   assert.ok(packageJson.files.includes("compat/"));
   assert.ok(packageJson.files.includes("mcpb/"));
+  assert.ok(packageJson.files.includes("integrations/ppocr/"));
   assert.equal(packageJson.files.some((entry) => /^(test|reports|docs\/superpowers)\/?/.test(entry)), false);
 });
 
@@ -186,6 +187,8 @@ test("core and DSH bundle publish independent allowlisted artifacts", async () =
   const forbidden = /^(?:test|reports|tmp|docs\/superpowers|config\/local(?:\.json)?)(?:\/|$)/;
 
   assert.equal(coreFiles.some((entry) => forbidden.test(entry)), false);
+  assert.equal(coreFiles.includes("integrations/ppocr/ppocrv5_mobile.py"), true);
+  assert.equal(coreFiles.includes("integrations/ppocr/README.md"), true);
   assert.equal(coreFiles.some((entry) => entry.startsWith("packages/dsh-plugin-chrome-faithful/")), false);
   assert.equal(bundleFiles.some((entry) => forbidden.test(entry)), false);
   assert.deepEqual(bundleFiles, [
