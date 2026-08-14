@@ -9,7 +9,10 @@ import { fileURLToPath } from "node:url";
 const root = new URL("../", import.meta.url);
 const rootPath = fileURLToPath(root);
 const execFileAsync = promisify(execFile);
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmCommand = process.platform === "win32" ? process.execPath : "npm";
+const npmPrefixArgs = process.platform === "win32"
+  ? [path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js")]
+  : [];
 
 async function readJson(path) {
   return JSON.parse(await readFile(new URL(path, root), "utf8"));
@@ -167,7 +170,7 @@ test("third-party notices cover every direct package dependency", async () => {
 async function dryRunPack(cwd) {
   const { stdout } = await execFileAsync(
     npmCommand,
-    ["pack", "--dry-run", "--json"],
+    [...npmPrefixArgs, "pack", "--dry-run", "--json"],
     { cwd, maxBuffer: 10 * 1024 * 1024, windowsHide: true }
   );
   const result = JSON.parse(stdout);

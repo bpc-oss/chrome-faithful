@@ -21,7 +21,11 @@ test("default bridge config is under private LocalAppData, not source", () => {
     resolved,
     path.join(localAppData, "AgentOS", "agentos-chrome-cdp", "config.json")
   );
-  assert.equal(path.relative(pluginRoot, resolved).startsWith(".."), true);
+  const relativeToPlugin = path.relative(pluginRoot, resolved);
+  assert.equal(
+    path.isAbsolute(relativeToPlugin) || relativeToPlugin.startsWith(".."),
+    true
+  );
 });
 
 test("loads a valid external config and rejects source-tree config", async () => {
