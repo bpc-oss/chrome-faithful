@@ -1,9 +1,11 @@
 # PP-OCRv5 mobile live quality acceptance
 
+**English** · [简体中文](visual-model-acceptance-2026-08-14.zh-CN.md)
+
 ## Verdict
 
-`PASS` for the default local OCR stage. This does not approve an optional VLM,
-which remained disabled and was not installed or evaluated.
+`PASS` for the default local OCR stage. The optional VLM was not approved; it
+remained disabled and was not installed or evaluated.
 
 ## Runtime
 
@@ -36,7 +38,7 @@ The corpus included Chinese, English, identifiers, punctuation, currency,
 decimal coordinates, 16 px small text, and low-contrast text:
 
 - expected blocks: 7
-- detected blocks: 7
+- detected blocks: 7/7
 - exact lines after Unicode normalization: 6/7
 - raw character accuracy: 99.43%
 - non-whitespace character accuracy: 100%

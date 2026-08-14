@@ -1,5 +1,7 @@
 # Chrome Faithful for DeepSeek Harness
 
+**English** · [简体中文](README.zh-CN.md)
+
 First-party DeepSeek Harness (DSH) bundle for Chrome Faithful. It mounts the
 existing Chrome Faithful MCP server through DSH's official MCP client, retaining
 all exact-profile routing, authentication, redaction, and browser-control
@@ -9,7 +11,7 @@ behavior without duplicating the 38 tools as native Cordis implementations.
 
 - DSH: `@deepseek-ai/dsh` `0.1.0-rc.6` or the same reviewed RC contract
 - Node.js: `>=22.12.0`
-- Chrome Faithful core: exactly the same version as this bundle
+- Chrome Faithful core: exactly `0.4.0`, the same version as this bundle
 
 DSH is currently an RC. Revalidate this bundle when moving to a newer DSH RC;
 the host owns `@deepseek-ai/dsh-mcp-client`, so this package deliberately does
@@ -45,6 +47,13 @@ For text-only DeepSeek models, `chrome_visual_extract` returns local OCR text,
 confidence, and normalized screenshot coordinates as text JSON. The default
 adapter requires a user-installed PaddleOCR runtime and explicit local
 PP-OCRv5 mobile model directories:
+
+Live quality acceptance passed on the direct production MCP path from the
+extension through the bridge and MCP server to `chrome_visual_extract`: 7/7
+blocks were detected with 99.43% raw and 100% non-whitespace character
+accuracy. DSH model consumption of `chrome_visual_extract` output was not
+evaluated. The optional VLM remained disabled, uninstalled, unevaluated, and
+not approved.
 
 ```text
 CHROME_FAITHFUL_PYTHON=C:\Python311\python.exe
@@ -94,5 +103,7 @@ before enabling the integration.
 
 Repository tests cover bundle composition, conditional environment evaluation,
 package isolation, absolute launcher resolution, and startup failure behavior.
-They are not proof of live DSH or live Chrome acceptance. A public release still
-requires a separately authorized disposable-profile acceptance run.
+A disposable-profile DSH startup and baseline tool-call acceptance passed for
+the pre-visual 37-tool surface. The later direct MCP quality acceptance covered
+the 38th tool, `chrome_visual_extract`, but did not evaluate a DSH model
+consuming that result. Revalidate both boundaries for every newer DSH RC.

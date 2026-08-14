@@ -135,7 +135,7 @@ function assertBilingualReleaseContract(documents, bundleFiles) {
     assert.deepEqual(uniqueEnvironmentVariables(documents[key]), [...forwardedVisualEnv].sort());
     assert.match(documents[key], /chrome_cdp/);
     assert.match(documents[key], /unrestricted raw CDP|不受限的 raw CDP/);
-    assert.match(documents[key], /DSH model consumption[^.]*was not evaluated|DSH 模型[^。]*未评测/i);
+    assert.match(documents[key], /DSH model consumption[^.]*was not\s+evaluated|DSH 模型[^。]*未评测/i);
     assert.match(documents[key], /VLM[^.。]*(?:not approved|未批准)/i);
     assert.doesNotMatch(documents[key], /DSH (?:OCR|vision) accepted/i);
     assert.doesNotMatch(documents[key], /DSH (?:OCR|视觉).{0,8}(?:已验收|通过验收)/);
@@ -297,7 +297,13 @@ test("DSH bundle has a stable public launcher and exact core version", async () 
   assert.equal(bundle.dependencies?.["@deepseek-ai/dsh-mcp-client"], undefined);
   assert.equal(bundle.engines.node, rootPackage.engines.node);
   assert.equal(bundle.dsh.bundle.patch, "./cordis.patch.yml");
-  assert.deepEqual(bundle.files, ["bin/", "cordis.patch.yml", "README.md", "LICENSE"]);
+  assert.deepEqual(bundle.files, [
+    "bin/",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ]);
   assert.equal(bundle.exports["./mcp-server"], "./bin/chrome-faithful-mcp.mjs");
   assert.equal(bundle.bin["chrome-faithful-mcp"], "./bin/chrome-faithful-mcp.mjs");
 
@@ -349,6 +355,7 @@ test("core and DSH bundle publish independent allowlisted artifacts", async () =
   assert.deepEqual(bundleFiles, [
     "LICENSE",
     "README.md",
+    "README.zh-CN.md",
     "bin/chrome-faithful-mcp.mjs",
     "cordis.patch.yml",
     "package.json"
@@ -416,7 +423,7 @@ test("bilingual release documents preserve reciprocal links and locked facts", a
     })],
     ["DSH model boundary", (value) => ({
       ...value,
-      dshEnglish: value.dshEnglish.replaceAll("was not evaluated", "was evaluated")
+      dshEnglish: value.dshEnglish.replace(/was not\s+evaluated/g, "was evaluated")
     })],
     ["VLM boundary", (value) => ({
       ...value,

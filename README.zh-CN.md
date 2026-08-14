@@ -111,6 +111,13 @@ MCP image content，纯文本 DeepSeek 模型仍可获得页面视觉信息。
 自行安装可选运行时，并显式设置两个本地模型绝对目录，避免 PaddleOCR 回退到
 自动下载权重：
 
+直接生产 MCP 路径的实机质量验收检出 7/7 个文本块，原始字符准确率 99.43%、
+忽略空白后准确率 100%，平均/最低置信度分别为 0.9754/0.9379；归一化坐标与
+阅读顺序有效，并在已验收的 AMD Ryzen 9 9950X3D 主机上连续三次得到完全一致
+的输出，端到端耗时约 3.00--3.25 秒。DSH 模型对
+`chrome_visual_extract` 输出的消费尚未评测，可选 VLM 也未批准。详见
+[中文验收报告](docs/visual-model-acceptance-2026-08-14.zh-CN.md)。
+
 ```text
 CHROME_FAITHFUL_PYTHON=C:\Python311\python.exe
 CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR=C:\Models\PP-OCRv5_mobile_det

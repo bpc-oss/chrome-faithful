@@ -235,7 +235,7 @@ git commit -m "docs: complete bilingual release presentation"
 
 ```bash
 npx --yes node@22.12.0 --test test/release-contract.test.mjs
-npm --prefix packages/dsh-plugin-chrome-faithful pack --dry-run --json
+npm pack --dry-run --json ./packages/dsh-plugin-chrome-faithful
 git diff --check
 ```
 
