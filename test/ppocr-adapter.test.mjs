@@ -96,7 +96,8 @@ test("adapter converts a fake PaddleOCR v5 prediction", async () => {
     mimeType: "image/png"
   }, {
     ...modelEnv,
-    PYTHONPATH: `${fakeModuleRoot}${delimiter}${process.env.PYTHONPATH || ""}`
+    PYTHONPATH: `${fakeModuleRoot}${delimiter}${process.env.PYTHONPATH || ""}`,
+    PYTHONIOENCODING: "cp1252"
   }));
   assert.deepEqual(result, {
     blocks: [{ text: "登录", confidence: 0.98, box: [0, 0, 1, 1] }]

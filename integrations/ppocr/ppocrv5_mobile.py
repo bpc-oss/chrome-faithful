@@ -239,8 +239,8 @@ def main():
             response = {"error": {"code": error.code, "message": error.public_message}}
         except Exception:
             response = {"error": {"code": "PPOCR_INTERNAL_ERROR", "message": "The local OCR adapter failed."}}
-    sys.stdout.write(json.dumps(response, ensure_ascii=False, separators=(",", ":")))
-    sys.stdout.write("\n")
+    payload = json.dumps(response, ensure_ascii=False, separators=(",", ":"))
+    sys.stdout.buffer.write((payload + "\n").encode("utf-8"))
 
 
 if __name__ == "__main__":
