@@ -12,3 +12,8 @@ reports/
 *.log
 .DS_Store
 Thumbs.db
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
