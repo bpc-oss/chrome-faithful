@@ -1,6 +1,6 @@
 # DSH First-Party Bundle Design
 
-**Status:** Proposed for independent review
+**Status:** Approved after independent review
 
 **Date:** 2026-08-14
 
@@ -50,18 +50,23 @@ floor is `@deepseek-ai/dsh` `0.1.0-rc.6`, whose published package includes
 composition contract to be revalidated before the documented host range is
 changed.
 
+The bundle declares the same Node.js floor as the core package:
+`>=22.12.0`. Composition uses DSH's `process.execPath`, so the host runtime
+must satisfy the core dependency's floor.
+
 ## Bundle composition
 
 `cordis.patch.yml` inserts one plugin row with these stable values:
 
-- plugin: `@deepseek-ai/dsh-mcp-client`
+- row id: `chrome-faithful-mcp`
+- `name`: `@deepseek-ai/dsh-mcp-client`
 - `serverName`: `chrome_faithful`
 - transport: `stdio`
 - command: `!!js process.execPath`
 - args: one absolute launcher path resolved from the profile `baseUrl` with
   `process.getBuiltinModule('node:module').createRequire(baseUrl).resolve(
   '@bpc-oss/dsh-plugin-chrome-faithful/mcp-server')`
-- tool-call timeout: `60000` milliseconds
+- `toolCallTimeoutMs`: `60000`
 - `failOnStartupError: true`
 - environment: one expression that returns `{}` when
   `AGENTOS_CHROME_CONFIG` is absent and otherwise returns
@@ -155,11 +160,13 @@ installed. They must prove:
    The expected actionable config error proves that launcher resolution reached
    the installed core. The path assertion runs on POSIX and uses Windows-safe
    path construction; the Windows CI job executes the same test.
-9. The conditional `env` expression is evaluated through DSH's expression/YAML
-   path, or the same published schema parser, with the environment variable both
-   absent and present. String or regex inspection alone is insufficient.
+9. The conditional `env` expression is first parsed and evaluated through DSH's
+   YAML expression path and then passed through the published MCP-client schema,
+   with the environment variable both absent and present. String or regex
+   inspection alone is insufficient.
 10. An isolated startup-failure fixture proves `failOnStartupError: true`
     rejects activation instead of leaving an active bundle with zero tools.
+11. The bundle and core declare the same `>=22.12.0` Node.js floor.
 
 Live DSH installation is not required for the source change because it would
 modify an external user-owned profile. Before a public release, a separately
