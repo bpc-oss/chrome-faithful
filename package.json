@@ -24,7 +24,7 @@
     "generate:parity-map": "node scripts/generate-codex-adapter-map.mjs",
     "check": "node scripts/check.mjs",
     "check:parity": "node scripts/check-codex-parity.mjs",
-    "test": "node --test test/*.test.mjs",
+    "test": "node scripts/run-unit-tests.mjs",
     "start": "node src/mcp-server.mjs",
     "bridge": "node src/bridge-server.mjs",
     "build:mcpb": "node scripts/build-mcpb.mjs"
@@ -35,7 +35,7 @@
     "ws": "^8.18.3"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   },
   "devDependencies": {
     "esbuild": "0.28.1"

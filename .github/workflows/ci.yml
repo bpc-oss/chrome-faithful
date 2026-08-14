@@ -13,13 +13,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run check
       - run: npm run check:parity
-      - run: npm test
       - run: npm run build:extension
+      - run: git diff --exit-code -- extension/generated/
+      - run: npm test
 
   test-windows:
     name: Node + installer tests (Windows)
@@ -28,13 +29,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run check
       - run: npm run check:parity
-      - run: npm test
       - run: npm run build:extension
+      - run: git diff --exit-code -- extension/generated/
+      - run: npm test
       - name: Installer transaction tests
         shell: pwsh
         run: pwsh -NoProfile -File test/installer-transactions.test.ps1

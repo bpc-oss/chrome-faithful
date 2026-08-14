@@ -1,8 +1,8 @@
 {
   "entry": "src/extension-runtime/entry.mjs",
   "output": "extension/generated/puppeteer-runtime.js",
-  "bytes": 1029266,
-  "sha256": "aa78f7594221925ae9aec6e323564723d15f7972f8bed4162175d1670e38e800",
+  "bytes": 1029251,
+  "sha256": "13def5cda71c4f375cffa3ae4f550c0deee5497ee2b0f6f913dbfbee26f8868e",
   "dependencies": {
     "puppeteer-core": "25.7.0",
     "esbuild": "0.28.1"

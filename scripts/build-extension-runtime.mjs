@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { normalizeLf } from "./text-normalization.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputDir = path.join(root, "extension", "generated");
@@ -18,7 +19,7 @@ const puppeteerBrowserBundle = path.join(
 );
 
 await mkdir(outputDir, { recursive: true });
-const puppeteerSource = await readFile(puppeteerBrowserBundle, "utf8");
+const puppeteerSource = normalizeLf(await readFile(puppeteerBrowserBundle, "utf8"));
 const adapterSource = await readFile(
   path.join(root, "src", "extension-runtime", "entry.mjs"),
   "utf8"
