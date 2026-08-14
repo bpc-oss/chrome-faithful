@@ -18,7 +18,7 @@ const adapterSource = await readFile(
 );
 
 test("pins the extension automation dependencies", () => {
-  assert.equal(packageJson.dependencies["puppeteer-core"], "24.35.0");
+  assert.equal(packageJson.dependencies["puppeteer-core"], "25.7.0");
   assert.equal(packageJson.devDependencies.esbuild, "0.28.1");
 });
 

@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "puppeteer-core": "24.35.0",
+    "puppeteer-core": "25.7.0",
     "ws": "^8.18.3"
   },
   "engines": {

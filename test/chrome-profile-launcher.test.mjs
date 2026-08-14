@@ -241,12 +241,12 @@ test("a correctly connected profile still requires a fresh verified bootstrap at
   assert.equal(result.connectedProfile.verifiedProfileDirectory, "Profile 3");
 });
 
-test("a Default profile self-reporting Baoping cannot satisfy a Profile 3 launch", async () => {
+test("a Default profile self-reporting Alice cannot satisfy a Profile 3 launch", async () => {
   let issued = false;
   let spawned = false;
   let listCalls = 0;
   const genericDefaultConnection = {
-    profileName: "Baoping",
+    profileName: "Alice",
     extensionId,
     buildId,
     bindingVerified: false,
@@ -254,7 +254,7 @@ test("a Default profile self-reporting Baoping cannot satisfy a Profile 3 launch
     version: "0.3.0"
   };
   const exactProfile3Connection = {
-    profileName: "Baoping",
+    profileName: "Alice",
     extensionId,
     buildId,
     bindingVerified: true,
@@ -272,7 +272,7 @@ test("a Default profile self-reporting Baoping cannot satisfy a Profile 3 launch
       issueBootstrapToken: async (binding) => {
         issued = true;
         assert.deepEqual(binding, {
-          profileName: "Baoping",
+          profileName: "Alice",
           extensionId,
           buildId,
           profileDirectory: "Profile 3"
@@ -281,7 +281,7 @@ test("a Default profile self-reporting Baoping cannot satisfy a Profile 3 launch
       },
       bootstrapStatus: async (currentAttemptId) => ({
         attemptId: currentAttemptId,
-        profileName: "Baoping",
+        profileName: "Alice",
         extensionId,
         buildId,
         bindingVerified: true,
@@ -294,7 +294,7 @@ test("a Default profile self-reporting Baoping cannot satisfy a Profile 3 launch
       ...trustedLauncherConfig,
       chromeProfileLauncher: {
         ...trustedLauncherConfig.chromeProfileLauncher,
-        extensionProfileNameOverrides: { "Profile 3": "Baoping" }
+        extensionProfileNameOverrides: { "Profile 3": "Alice" }
       }
     },
     profileName: "Profile 3"

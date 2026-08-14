@@ -34,13 +34,13 @@ const genericBoundaryFiles = [
   "skills/control-chrome-cdp/SKILL.md"
 ];
 const projectSpecificTokens = [
-  "AI TUBE",
-  "E:\\\\AI TUBE",
+  "PRIVATE_PROJECT",
+  "E:\\\\PRIVATE_PROJECT",
   "TikTok",
   "YouTube",
   "Douyin",
-  "报平",
-  "Baoping"
+  "PersonalHandle",
+  "PersonalName"
 ];
 for (const file of genericBoundaryFiles) {
   const content = await readFile(path.join(root, file), "utf8");

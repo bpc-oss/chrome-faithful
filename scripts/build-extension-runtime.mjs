@@ -54,7 +54,7 @@ const manifest = {
   bytes: bytes.length,
   sha256: createHash("sha256").update(bytes).digest("hex"),
   dependencies: {
-    "puppeteer-core": "24.35.0",
+    "puppeteer-core": "25.7.0",
     esbuild: "0.28.1"
   },
   transport: "ExtensionTransport.connectTab",

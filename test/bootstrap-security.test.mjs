@@ -337,14 +337,14 @@ test("verified bootstrap atomically supersedes a same-binding unverified live pr
   let exactSocket;
   try {
     const placeholder = await register(config, {
-      profileName: "Baoping",
+      profileName: "Alice",
       extensionId,
       buildId,
       version: "test"
     });
     const client = new BridgeClient(config);
     const issued = await client.issueBootstrapToken({
-      profileName: "Baoping",
+      profileName: "Alice",
       extensionId,
       buildId,
       profileDirectory: "Profile 3"
@@ -355,7 +355,7 @@ test("verified bootstrap atomically supersedes a same-binding unverified live pr
       `chrome-extension://${extensionId}`
     );
     const exact = await register(config, {
-      profileName: "Baoping",
+      profileName: "Alice",
       extensionId,
       buildId,
       attemptId: issued.attemptId,

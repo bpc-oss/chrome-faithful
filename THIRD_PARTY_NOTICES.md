@@ -1,6 +1,6 @@
 # Third-party notices
 
-## puppeteer-core 24.35.0
+## puppeteer-core 25.7.0
 
 Copyright 2017 Google Inc.
 
