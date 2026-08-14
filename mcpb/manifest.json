@@ -3,9 +3,9 @@
   "manifest_version": "0.4",
   "name": "agentos-chrome-cdp",
   "display_name": "Agent OS Chrome CDP",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Control exact existing Chrome profiles through an authenticated localhost chrome.debugger bridge.",
-  "long_description": "Provides Codex-compatible exact-profile Chrome tabs, locators, raw CDP, event streaming, screenshots, history, clipboard, coordinate input, page File plus DataTransfer injection, profile-bound page asset export, and durable virtual-list capture. It never launches a debug profile or remote-debugging port.",
+  "long_description": "Provides Codex-compatible exact-profile Chrome tabs, locators, raw CDP, event streaming, screenshots, history, clipboard, coordinate input, page File plus DataTransfer injection, profile-bound page asset export, durable virtual-list capture, and a verification-handling module (challenge detection, hold/resume, human handoff, overlay dismissal, humanized input, slider/checkbox solvers, OCR/ASR backend capture). It never launches a debug profile or remote-debugging port.",
   "author": {
     "name": "Agent OS"
   },

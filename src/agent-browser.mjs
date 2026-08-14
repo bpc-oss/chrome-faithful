@@ -778,14 +778,17 @@ export class ChromeTab {
       move: ({ x, y, keys = [] }) => transport.cdp(this.id, "Input.dispatchMouseEvent", {
         type: "mouseMoved", x, y, modifiers: modifierBits(keys)
       }),
-      drag: async ({ path, keys = [] }) => {
+      drag: async ({ path, keys = [], delays = [] }) => {
         if (!Array.isArray(path) || path.length < 2) throw new Error("CUA drag requires at least two path points");
         const modifiers = modifierBits(keys);
         const [first, ...rest] = path;
         await transport.cdp(this.id, "Input.dispatchMouseEvent", { type: "mouseMoved", ...first, modifiers });
         await transport.cdp(this.id, "Input.dispatchMouseEvent", { type: "mousePressed", ...first, button: "left", modifiers, clickCount: 1 });
-        for (const point of rest) {
+        for (let index = 0; index < rest.length; index += 1) {
+          const point = rest[index];
           await transport.cdp(this.id, "Input.dispatchMouseEvent", { type: "mouseMoved", ...point, button: "left", buttons: 1, modifiers });
+          const delay = Number(delays[index]);
+          if (Number.isFinite(delay) && delay > 0) await sleep(Math.min(2000, delay));
         }
         const last = path.at(-1);
         await transport.cdp(this.id, "Input.dispatchMouseEvent", { type: "mouseReleased", ...last, button: "left", modifiers, clickCount: 1 });

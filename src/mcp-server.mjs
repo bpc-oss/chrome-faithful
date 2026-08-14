@@ -26,6 +26,16 @@ import {
 } from "./network-response.mjs";
 import { summarizeNetworkRequestPostData } from "./network-request.mjs";
 import { runProfileSelftest } from "./selftest.mjs";
+import {
+  detectChallenge,
+  dismissBenignOverlays,
+  solveCheckbox,
+  solveSlider,
+  captureChallengeAssets,
+  runSolvePipeline,
+  VerificationHold,
+  createBackendFromEnv
+} from "./verification/index.mjs";
 
 const config = await loadConfig();
 const router = await createResilientBridgeRouter(config);
@@ -34,7 +44,9 @@ const tabMutationQueue = new TabMutationQueue();
 const assetCaptureJobs = new Map();
 const scrollCaptureJobs = new Map();
 const activeAssetCapturePromises = new Map();
-const IMPLEMENTATION_VERSION = "0.3.1+codex.20260801130514";
+const verification = new VerificationHold();
+const verificationBackend = createBackendFromEnv(process.env.AGENTOS_VERIFICATION_BACKEND);
+const IMPLEMENTATION_VERSION = "0.4.0+codex.20260801130514";
 const NETWORK_BODY_RETRY_ERRORS = /(?:No data found|evicted from inspector cache|resource with given identifier)/i;
 
 async function readNetworkResponseBody(profileName, tabId, requestId, target) {
@@ -678,6 +690,132 @@ const schemas = [
       required: ["profileName", "tabId"],
       additionalProperties: false
     }
+  },
+  {
+    name: "chrome_verification_detect",
+    description: "Detect and classify human-verification challenges (reCAPTCHA, hCaptcha, Cloudflare Turnstile, GeeTest, slider, image-select, text signals) in one exact profile tab. Optionally records a per-profile verification hold so the agent pauses instead of retrying blindly.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        profileName: { type: "string" },
+        tabId: { type: ["string", "number"] },
+        autoHold: { type: "boolean", default: true, description: "Record a verification hold when a challenge is detected." }
+      },
+      required: ["profileName", "tabId"],
+      additionalProperties: false
+    }
+  },
+  {
+    name: "chrome_verification_status",
+    description: "Return the current verification hold state for one exact profile (idle / challenge_detected / waiting_for_human / cleared) plus recent transitions.",
+    inputSchema: {
+      type: "object",
+      properties: { profileName: { type: "string" } },
+      required: ["profileName"],
+      additionalProperties: false
+    }
+  },
+  {
+    name: "chrome_verification_resume",
+    description: "Clear the verification hold for one exact profile after the challenge was solved (automatically or by a human in the visible browser).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        profileName: { type: "string" },
+        reason: { type: "string", description: "Optional reason recorded in the transition log." }
+      },
+      required: ["profileName"],
+      additionalProperties: false
+    }
+  },
+  {
+    name: "chrome_verification_solve",
+    description: "Detect a challenge and run the matching solve strategy: checkbox click + token wait (reCAPTCHA v2 / hCaptcha / Turnstile), humanized slider drag (GeeTest / slider), or capture for an external OCR/ASR backend (image-select / generic). On success the hold is cleared; otherwise a human handoff message is returned.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        profileName: { type: "string" },
+        tabId: { type: ["string", "number"] },
+        challenge: {
+          type: "object",
+          description: "Optional pre-classified challenge ({ type, provider, interactive, frameUrl }) to skip detection.",
+          properties: {
+            type: { type: "string" },
+            provider: { type: "string" },
+            interactive: { type: "boolean" },
+            frameUrl: { type: "string" }
+          },
+          additionalProperties: false
+        },
+        savePath: { type: "string", description: "Absolute path for captured challenge images (capture strategies)." },
+        verifyCleared: { type: "boolean", default: true },
+        timeoutMs: { type: "integer", minimum: 1000, maximum: 120000 }
+      },
+      required: ["profileName", "tabId"],
+      additionalProperties: false
+    }
+  },
+  {
+    name: "chrome_verification_solve_checkbox",
+    description: "Click the visible challenge checkbox (reCAPTCHA v2 / hCaptcha / Turnstile) with a human-like click and wait until the hidden response token is populated.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        profileName: { type: "string" },
+        tabId: { type: ["string", "number"] },
+        challengeType: { type: "string", enum: ["recaptcha-v2", "hcaptcha", "turnstile"], default: "turnstile" },
+        timeoutMs: { type: "integer", minimum: 1000, maximum: 120000 }
+      },
+      required: ["profileName", "tabId"],
+      additionalProperties: false
+    }
+  },
+  {
+    name: "chrome_verification_solve_slider",
+    description: "Solve a slider challenge by dragging the handle to the track end (or to an explicit gap offset) with a humanized bezier trajectory (monotonic x, jitter, ease-in-out delays). Optionally polls a verification expression.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        profileName: { type: "string" },
+        tabId: { type: ["string", "number"] },
+        selector: { type: "string", description: "Optional CSS selector for the slider handle; heuristic detection when omitted." },
+        gap: { type: "number", description: "Optional target gap x offset from the track left (from a gap-detection backend)." },
+        verifyExpression: { type: "string", description: "Optional expression returning true when the slider is accepted." },
+        timeoutMs: { type: "integer", minimum: 1000, maximum: 120000 }
+      },
+      required: ["profileName", "tabId"],
+      additionalProperties: false
+    }
+  },
+  {
+    name: "chrome_verification_capture",
+    description: "Capture challenge assets (image region file and/or audio URL) for an external OCR/ASR backend, and optionally submit them to the configured backend for an answer. Returns paths, hashes, and the backend text.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        profileName: { type: "string" },
+        tabId: { type: ["string", "number"] },
+        savePath: { type: "string", description: "Absolute path for the captured challenge image (.png)." },
+        mode: { type: "string", enum: ["image", "audio", "both"], default: "both" },
+        solve: { type: "boolean", default: true, description: "Submit the capture to the configured backend for an answer." }
+      },
+      required: ["profileName", "tabId"],
+      additionalProperties: false
+    }
+  },
+  {
+    name: "chrome_verification_dismiss_overlays",
+    description: "Dismiss benign overlays (cookie banners, onboarding tooltips, got-it popups) using a conservative text allowlist. Never touches challenge widgets.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        profileName: { type: "string" },
+        tabId: { type: ["string", "number"] },
+        maxDismissals: { type: "integer", minimum: 0, maximum: 8, default: 3 }
+      },
+      required: ["profileName", "tabId"],
+      additionalProperties: false
+    }
   }
 ];
 
@@ -1293,6 +1431,97 @@ server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
       }
       content.push({ type: "image", mimeType: "image/png", data: png.toString("base64") });
       return { content };
+    }
+    if (params.name.startsWith("chrome_verification")) {
+      const profileName = args.profileName;
+      if (params.name === "chrome_verification_status") {
+        return textResult(verification.status(profileName));
+      }
+      if (params.name === "chrome_verification_resume") {
+        return textResult(verification.resume(profileName, { reason: args.reason || "manual" }));
+      }
+      const tab = await (await browser(profileName)).tabs.get(args.tabId);
+      const evaluate = (expression) => tab.playwright.evaluate(expression);
+      const click = async ({ x, y }) => tab.cua.click({ x, y });
+      const drag = async ({ path, delays }) => tab.cua.drag({ path, delays });
+      const screenshot = async ({ clip, savePath }) => {
+        const bytes = await tab.screenshot({ clip });
+        if (!savePath) return { savedPath: null, bytes: bytes.length };
+        if (!isAbsolute(savePath)) throw new Error("chrome_verification capture savePath must be absolute");
+        await mkdir(dirname(savePath), { recursive: true });
+        await writeFile(savePath, bytes);
+        return { savedPath: savePath, bytes: bytes.length };
+      };
+      if (params.name === "chrome_verification_detect") {
+        const detection = await detectChallenge({ evaluate, tabId: tab.id });
+        if (args.autoHold !== false && detection.detected) {
+          verification.report(profileName, detection.challenges[0]);
+        }
+        return textResult({ profileName, ...detection, hold: verification.status(profileName) });
+      }
+      if (params.name === "chrome_verification_dismiss_overlays") {
+        return textResult({ profileName, ...(await dismissBenignOverlays({ evaluate, click, maxDismissals: args.maxDismissals })) });
+      }
+      if (params.name === "chrome_verification_solve_checkbox") {
+        const result = await solveCheckbox({ evaluate, click, timeoutMs: args.timeoutMs });
+        if (result.solved) verification.resume(profileName, { reason: "checkbox solved" });
+        return textResult({ profileName, ...result });
+      }
+      if (params.name === "chrome_verification_solve_slider") {
+        const result = await solveSlider({
+          evaluate,
+          drag,
+          selector: args.selector,
+          gap: args.gap,
+          verifyExpression: args.verifyExpression,
+          timeoutMs: args.timeoutMs
+        });
+        if (result.solved) verification.resume(profileName, { reason: "slider solved" });
+        return textResult({ profileName, ...result });
+      }
+      if (params.name === "chrome_verification_capture") {
+        const result = await captureChallengeAssets({ evaluate, screenshot, savePath: args.savePath });
+        let answer = null;
+        const wantImage = args.mode !== "audio";
+        const wantAudio = args.mode !== "image";
+        if (result.captured && args.solve !== false && verificationBackend) {
+          try {
+            if (wantImage && result.image?.path) {
+              const backendResult = await verificationBackend.solveImage({ imagePath: result.image.path });
+              answer = backendResult?.text ?? backendResult ?? null;
+            } else if (wantAudio && (result.audioSrc || result.audioLink)) {
+              const backendResult = await verificationBackend.solveAudio({ audioUrl: result.audioSrc || result.audioLink });
+              answer = backendResult?.text ?? backendResult ?? null;
+            }
+          } catch (error) {
+            answer = { error: error.message };
+          }
+        }
+        return textResult({ profileName, ...result, backendAnswer: answer });
+      }
+      if (params.name === "chrome_verification_solve") {
+        const detection = args.challenge
+          ? { detected: true, challenges: [args.challenge] }
+          : await detectChallenge({ evaluate, tabId: tab.id });
+        if (!detection.detected) return textResult({ profileName, detected: false, result: "no_challenge" });
+        const challenge = detection.challenges[0];
+        verification.report(profileName, challenge);
+        const result = await runSolvePipeline({
+          challenge,
+          evaluate,
+          click,
+          drag,
+          screenshot,
+          savePath: args.savePath,
+          backend: verificationBackend,
+          verifyCleared: args.verifyCleared !== false,
+          timeoutMs: args.timeoutMs
+        });
+        if (result.solved) verification.resume(profileName, { reason: `solved ${challenge.type}` });
+        else verification.handoff(profileName, challenge);
+        return textResult({ profileName, challenge, ...result, hold: verification.status(profileName) });
+      }
+      throw new Error(`Unknown verification tool: ${params.name}`);
     }
     throw new Error(`Unknown tool: ${params.name}`);
   } catch (error) {

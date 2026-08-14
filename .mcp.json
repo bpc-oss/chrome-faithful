@@ -5,7 +5,7 @@
       "command": "node",
       "args": ["src/mcp-server.mjs"],
       "env": {
-        "AGENTOS_CHROME_SCHEMA_CACHEBUSTER": "20260801130514"
+        "AGENTOS_CHROME_SCHEMA_CACHEBUSTER": "20260814120000"
       }
     }
   }

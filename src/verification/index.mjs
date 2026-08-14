@@ -1,0 +1,11 @@
+export { detectChallenge, classifyChallenges, DETECT_EXPRESSION, CHALLENGE_TEXT_SIGNALS, PROVIDER_PATTERNS } from "./detect.mjs";
+export { VerificationHold, HOLD_STATUS } from "./hold.mjs";
+export { buildHandoffMessage, CHALLENGE_GUIDANCE } from "./handoff.mjs";
+export { dismissBenignOverlays, BENIGN_DISMISS_TEXT, DISMISS_EXPRESSION } from "./overlay.mjs";
+export { bezierPath, addJitter, clampMonotonicX, dragDelays, humanizeDrag, mulberry32 } from "./input.mjs";
+export { pollUntil, waitForChallengeCleared, PollTimeoutError, sleep } from "./wait.mjs";
+export { solveSlider, SLIDER_LOCATE_EXPRESSION, SLIDER_VERIFY_DEFAULT } from "./solvers/slider.mjs";
+export { solveCheckbox, CHECKBOX_LOCATE_EXPRESSION, TOKEN_READ_EXPRESSION } from "./solvers/checkbox.mjs";
+export { captureChallengeAssets, CHALLENGE_ASSET_EXPRESSION } from "./solvers/capture.mjs";
+export { CliBackend, HttpBackend, createBackend, createBackendFromEnv, SolverBackendError } from "./solvers/backends.mjs";
+export { runSolvePipeline } from "./solve.mjs";

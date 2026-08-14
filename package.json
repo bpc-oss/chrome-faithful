@@ -1,6 +1,6 @@
 {
   "name": "chrome-faithful",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "type": "module",
   "description": "Faithful control of your real, logged-in Chrome profiles: MCP server + MV3 extension + authenticated localhost bridge. No copied profiles, no debug profile, no remote-debugging port, no Edge.",
   "license": "MIT",

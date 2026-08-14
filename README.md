@@ -157,6 +157,7 @@ Run them without `-Apply` first — the default is a dry-run preview.
 | Raw CDP & network | `chrome_cdp`, `chrome_network_asset_v1` |
 | Capture & evidence | `chrome_screenshot`, `chrome_cua_scroll_capture_v1/v2/v3`, `chrome_cua_scroll_capture_status_v1`, `chrome_cua_scroll_asset_capture_start/status/cancel_v2` |
 | Assets & content | `chrome_page_asset`, `chrome_page_asset_v2`, `chrome_content_v2` (pdf/md/xlsx/csv/docx/pptx) |
+| Verification | `chrome_verification_detect`, `chrome_verification_status`, `chrome_verification_resume`, `chrome_verification_solve`, `chrome_verification_solve_checkbox`, `chrome_verification_solve_slider`, `chrome_verification_capture`, `chrome_verification_dismiss_overlays` |
 | Utilities | `chrome_file_inject`, `chrome_history`, `chrome_clipboard` |
 
 Notable behaviors: locator calls wait up to 30 s for visibility and are
@@ -164,6 +165,40 @@ serialized per profile+tab; `fill` uses replacement semantics; `chrome_locator`
 accepts a zero-based `index` (`-1` = last) for multi-match selectors;
 screenshots accept an optional document-coordinate `clip` and absolute
 `savePath` and still return the PNG.
+
+## Verification handling
+
+Because Chrome Faithful drives your *real* profile, most bot checks never
+trigger. When a platform still presents a human-verification challenge, the
+verification module gives agents a structured loop instead of blind retries:
+
+1. `chrome_verification_detect` — multi-signal detection and classification
+   (reCAPTCHA v2/v3, hCaptcha, Cloudflare Turnstile, GeeTest, slider,
+   image-select, and text signals). Optionally records a per-profile hold.
+2. `chrome_verification_solve` — picks the matching strategy automatically:
+   checkbox click + token wait (reCAPTCHA v2 / hCaptcha / Turnstile),
+   humanized slider drag (GeeTest / slider), or capture for an external
+   OCR/ASR backend (image-select / generic). Clears the hold on success,
+   produces a human handoff message otherwise.
+3. `chrome_verification_status` / `chrome_verification_resume` — per-profile
+   hold state machine (`idle → challenge_detected → waiting_for_human →
+   cleared`) with an auditable transition log.
+4. `chrome_verification_capture` — saves the challenge image region and/or the
+   audio URL and submits them to the configured backend for an answer.
+5. `chrome_verification_dismiss_overlays` — dismisses benign cookie/onboarding
+   overlays with a strict allowlist.
+
+Interaction is humanized throughout: seeded bezier trajectories with jitter,
+monotonic-x slider drags, ease-in-out timing (`src/verification/input.mjs`).
+Recognition brains (audio transcription, image OCR, slider gap detection) are
+**external and optional** — enable one via the `AGENTOS_VERIFICATION_BACKEND`
+environment variable, e.g.
+`cli:python scripts/verification/captcha-backend-adapter.py` (reference JSON
+adapter for the Python faster-whisper / OCR / opencv stack) or an HTTP
+endpoint. Without a backend, detection, hold/resume, handoff, overlay
+dismissal, and humanized interaction all still work.
+
+Design: [docs/superpowers/specs/2026-08-14-verification-handling-design.md](docs/superpowers/specs/2026-08-14-verification-handling-design.md)
 
 ## JavaScript integration
 
