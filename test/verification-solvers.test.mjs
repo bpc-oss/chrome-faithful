@@ -179,6 +179,7 @@ test("solveCheckbox reports widget_pending_render when the challenge frame never
   assert.equal(result.solved, false);
   assert.equal(result.reason, "widget_pending_render");
   assert.equal(result.widgetClass, "cf-turnstile");
+  assert.equal(result.next, "refresh-session-then-trigger-real-submit");
 });
 
 test("solveCheckbox times out when no token appears and the widget state is unknown", async () => {

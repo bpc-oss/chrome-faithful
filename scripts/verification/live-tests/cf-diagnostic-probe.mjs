@@ -1,5 +1,7 @@
 // Diagnostic probe for the "widget rendered but challenge iframe missing"
-// state (a known Cloudflare Turnstile stall in some networks/profiles).
+// (pending-render) state. Field data shows the usual root cause is a
+// stale/expired session rather than a network stall — see
+// src/verification/handoff.mjs (turnstile-pending) for the escalation order.
 //
 //   python -m http.server 18999 --directory scripts/verification/live-tests
 //   node scripts/verification/live-tests/cf-diagnostic-probe.mjs [profileName]

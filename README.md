@@ -265,7 +265,7 @@ states:
 |---|---|---|
 | `resolved` | A token is already populated (e.g. invisible challenge completed) | Not a blocker — proceed |
 | active provider iframe (reCAPTCHA v2/v3, hCaptcha, Turnstile, GeeTest, vaptcha) | A visible challenge widget is present | Solve it |
-| `pending-render` | A widget container exists but its challenge iframe never rendered — typically a network/provider handshake stall | Reload-and-retry guidance or human handoff |
+| `pending-render` | A widget container exists but its challenge iframe never rendered. Field data shows the usual root cause is a **stale/expired session**, not a network handshake stall | Refresh the session (sign out/in), trigger the page's real submit/verify button, reload-and-retry, or hand off |
 
 Static markers (the ubiquitous reCAPTCHA badge) are explicitly excluded, so a
 page that merely *loads* reCAPTCHA is never reported as a challenge.
@@ -274,7 +274,12 @@ page that merely *loads* reCAPTCHA is never reported as a challenge.
 
 1. **Checkbox / token wait** — reCAPTCHA v2 / hCaptcha / Turnstile: click the
    visible challenge control (provider iframe center preferred) and poll the
-   hidden response token until populated.
+   hidden response token until populated. For silent/interaction-only Turnstile
+   with no visible checkbox, trigger the page's real submit/verify button with
+   a JS click (`btn.click()` via page evaluation — locators time out when the
+   button is off-screen or covered) so `turnstile.execute()` runs the actual
+   challenge; the backend validates the real token, so never monkey-patch
+   `window.turnstile` (fake/empty tokens are rejected, e.g. HTTP 422).
 2. **Humanized slider drag** — GeeTest / slider: locate the handle, compute the
    target (track end or a backend gap offset), drag with a seeded bezier
    trajectory (monotonic x, jitter, ease-in-out delays), then verify
@@ -312,6 +317,21 @@ are authorized to use.
 
 Design: [docs/superpowers/specs/2026-08-14-verification-handling-design.md](docs/superpowers/specs/2026-08-14-verification-handling-design.md)
 
+**Turnstile truth (field-verified).** In a real submission workflow, a
+"widget rendered but challenge iframe never appears / token stays empty" state
+turned out to be a **stale session**, not an environmental dead-end: after
+signing out and back in on the same profile, the challenge rendered and
+completed normally. The working path is a real front-end click — trigger the
+page's actual submit/verify button (a JS `btn.click()` via page evaluation
+works even when the button is off-screen) so `turnstile.execute()` runs the
+real challenge, then let the challenge-complete callback submit the real
+token. In the field case the platform's submit endpoint validated that token
+strictly (fake/empty → HTTP 422), and monkey-patching `window.turnstile`
+(getResponse / render-with-immediate-callback / hidden-input injection) never
+produces one. Escalation order for
+`pending-render`: refresh session → trigger real submit → reload-and-retry →
+hand off.
+
 ## Live testing
 
 `scripts/verification/live-tests/` contains reproducible harnesses that drive
@@ -327,7 +347,7 @@ they are closed after each run):
   `python -m http.server 18999 --directory scripts/verification/live-tests`.
 - `cf-diagnostic-probe.mjs [profileName]` — dumps widget markup / iframe /
   `window.turnstile` state for the "widget rendered but challenge iframe
-  missing" stall.
+  missing" (pending-render) state.
 - `final-regression.mjs [profileName]` — badge-only pages must not be
   detected; click-to-pass must still solve.
 

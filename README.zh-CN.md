@@ -186,13 +186,13 @@ npm ci --ignore-scripts
 |---|---|---|
 | `resolved` | token 已填充（例如隐形挑战已完成） | 不是阻塞——继续 |
 | 活动供应商 iframe（reCAPTCHA v2/v3、hCaptcha、Turnstile、GeeTest、vaptcha） | 存在可见挑战组件 | 求解 |
-| `pending-render` | 组件容器存在但挑战 iframe 从未渲染——通常是网络/供应商握手停滞 | 重载重试指引或人工交接 |
+| `pending-render` | 组件容器存在但挑战 iframe 从未渲染。实机数据表明**根因通常是会话过期/失效**，而非网络/供应商握手停滞 | 刷新会话（退出重登）→ 触发页面真实提交/验证按钮 → 重载重试 → 人工交接 |
 
 静态标记（无处不在的 reCAPTCHA 徽标）被显式排除，因此只*加载*了 reCAPTCHA 的页面绝不会被报为挑战。
 
 **求解**（`chrome_verification_solve`）按类型选策略：
 
-1. **Checkbox / token 等待** —— reCAPTCHA v2 / hCaptcha / Turnstile：点击可见挑战控件（优先 provider iframe 中心），轮询隐藏响应 token 直到填充。
+1. **Checkbox / token 等待** —— reCAPTCHA v2 / hCaptcha / Turnstile：点击可见挑战控件（优先 provider iframe 中心），轮询隐藏响应 token 直到填充。对无可见 checkbox 的静默/交互触发式 Turnstile，用 JS 点击（页面求值 `btn.click()`——locator 在按钮位于屏幕外/被覆盖时会超时）触发页面真实提交/验证按钮，让 `turnstile.execute()` 走真实挑战流；后端严格校验真 token（假/空 token 会被拒，如 HTTP 422），**切勿 monkey-patch `window.turnstile`**。
 2. **人机化滑块拖拽** —— GeeTest / slider：定位滑块手柄，计算目标（轨道末端或后端缺口偏移），用种子化贝塞尔轨迹（单调 X、抖动、缓入缓出延迟）拖拽，然后验证通过。缺口在手柄后方时 fail-closed，不反向拖拽。
 3. **点击优先 generic** —— 文本信号/未知挑战：先点一次明显的 "Verify you are human" / "验证" / "继续" 按钮（或挑战 checkbox），短暂等待 token，只有失败才升级。
 4. **capture 送后端** —— 图片选择/音频挑战：保存挑战图片区域和/或音频 URL，提交给外部 OCR/ASR 后端。
@@ -204,6 +204,8 @@ npm ci --ignore-scripts
 **识别后端是外部且可选的。** 通过 `AGENTOS_VERIFICATION_BACKEND` 环境变量启用，例如 `cli:python scripts/verification/captcha-backend-adapter.py`（面向 Python faster-whisper / OCR / opencv 栈的参考 JSON 适配器；能导入 Agent OS captcha 连接器时优先使用，否则回退到独立 faster-whisper / ddddocr / tesseract / opencv）或 HTTP 端点。没有后端时，检测、hold/resume、交接、遮罩清理、拟人交互全部照常工作。启用后，配置的进程或端点会收到本地捕获路径和/或挑战音频 URL 以及请求动作；HTTP 端点因此可能把挑战数据或凭据带到本项目之外。只配置你信任且获准使用的端点。
 
 设计：[docs/superpowers/specs/2026-08-14-verification-handling-design.md](docs/superpowers/specs/2026-08-14-verification-handling-design.md)
+
+**Turnstile 真相（实机验证）。** 在真实提交流程中，"组件已渲染但挑战 iframe 从未出现 / token 恒空"的状态实为**会话过期**，而非环境死结：同一 profile 退出重登后，挑战正常渲染并完成。可行路径 = 真实前端点击——用 JS `btn.click()`（页面求值，屏幕外按钮也可）触发页面实际提交/验证按钮，让 `turnstile.execute()` 运行真实挑战，再由挑战完成回调提交真 token。实机中平台提交端点严格校验该 token（假/空 → HTTP 422），monkey-patch `window.turnstile`（getResponse / render 立即回调 / 注入 hidden input）永远无法产出真 token。`pending-render` 升级顺序：刷新会话 → 触发真实提交 → 重载重试 → 人工交接。
 
 ## 实机测试
 

@@ -132,7 +132,7 @@ profile (`scripts/verification/live-tests/`):
 | Local page, forced-interactive sitekey `3x00000000000000000000FF` | **`widget_pending_render`** — api.js loaded, `window.turnstile` API present, but the challenge iframe never renders and the token stays empty. The solver now reports this precise diagnosis instead of a misleading timeout. |
 | Local click-to-pass simulation ("Verify you are human" button that sets a token) | **`solved: true`** — detection flags the text signal, the pipeline clicks the visible verify button (`click_challenge_control`, kind `verify-button`), the token populates, and re-detection reports `resolved: true`. This is the "one click and it passes" scenario the user reported; the generic path previously handed off without ever clicking. |
 | Local badge-only page (`.grecaptcha-badge`, no widget) | **`detected: false`** — the reCAPTCHA badge is excluded from widget detection, and the bare text signal "captcha" was removed (it matched benign "protected by reCAPTCHA" copy), so badge-only pages are never reported as challenges. |
-| Diagnostic probe | `.cf-turnstile` container exists (70 px tall) with only an empty hidden `cf-turnstile-response` input; `frames: []`; no shadow root. Matches the earlier documented finding that Cloudflare's handshake stalls in this environment/profile. |
+| Diagnostic probe | `.cf-turnstile` container exists (70 px tall) with only an empty hidden `cf-turnstile-response` input; `frames: []`; no shadow root. Matches the earlier documented finding that Cloudflare's handshake stalls in this environment/profile — **superseded by the field truth below** (root cause was the stale session, not the environment). |
 
 Live findings drove five fixes: (1) detection now distinguishes *resolved* /
 *pending-render* / *active provider iframe* states (pending-widget classified
@@ -148,12 +148,48 @@ in the page expression and in the classifier; (5) handoff carries
 reload-and-retry guidance for the pending-render state, including a
 reCAPTCHA-pending variant.
 
+## Turnstile truth (field-verified)
+
+Field work across a real engagement submission superseded parts of the
+2026-08-14 findings above. The "challenge iframe never renders / token stays
+empty" symptom is **not an environmental dead end**:
+
+| Old assumption | Field truth |
+|---|---|
+| "Server does not validate the token" | Only the *update* endpoint is lenient. The *publish/submit* endpoint validates strictly: fake / empty / missing `cf_turnstile_response` → `422 Security verification failed`. A real token is mandatory. |
+| "Monkey-patching the widget can produce a token" | Fails every time. The page flow is: real button click → `turnstile.execute()` → challenge-complete callback → submit with the real token. Patching `getResponse`, `render`-with-immediate-callback, or injecting the hidden input cannot fabricate the callback the flow waits on (a guard flag is only armed by the actual click). |
+| "The environment never completes Turnstile" | The **stale session** was the root cause. On the *same real profile*, a stale/expired session never rendered the challenge frame; after sign-out → sign-in (fresh auth state) the challenge rendered and completed normally. Session freshness, not network/IP, is the first variable to check. |
+| "Reach the challenge iframe to solve it" | Not needed for the common case: click the page's real submit/verify button (a JS `btn.click()` via page evaluation — locators time out when the button is off-screen or covered) and let the provider's own flow finish. |
+
+Practical escalation order for `widget_pending_render` on Turnstile (and a
+good first step for reCAPTCHA-v2 pending too):
+
+1. **Refresh the session** — sign out and sign back in on the same profile
+   (fresh authentication state). This fixed the field case.
+2. **Trigger the page's real submit/verify action** with a JS click so
+   `turnstile.execute()` runs the actual challenge; wait for the challenge to
+   complete and the callback to fire (the button label often changes, e.g.
+   "Verifying…").
+3. **Reload the page once and retry** — each click re-arms a fresh challenge.
+4. Only then hand off to the human owner of the profile.
+
+Do not monkey-patch `window.turnstile`; backends validate the real token.
+
+Additional field notes: some platform APIs address submissions by an internal
+id that differs from the page-URL id (do not mix them), and the platform's
+list API (e.g. a submissions list exposing draft/submitted flags) is the
+source of truth for whether a submission actually went through.
+
 ## Known limits and follow-ups
 
 - Cross-origin challenge iframes (hCaptcha/Turnstile run as OOPIFs) cannot be
   reached by page-context evaluation; visible-widget interaction (checkbox
   click) works because the widget is in the top document, while in-iframe
   content solving requires frame-targeted CDP evaluation (follow-up).
+  For Turnstile in silent/interaction-only mode, prefer triggering the page's
+  real submit/verify button (JS click) over waiting for a visible iframe.
+- `widget_pending_render` is actionable, not terminal: first refresh the
+  session, then trigger the real submit flow (see "Turnstile truth" above).
 - Extension event-channel integration (`verification.challenge_detected` in
   `chrome_page_event_v2`) is a follow-up; today the state is readable through
   `chrome_verification_status`.
