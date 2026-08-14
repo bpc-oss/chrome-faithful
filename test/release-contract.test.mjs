@@ -105,11 +105,13 @@ test("npm package uses an explicit runtime allowlist", async () => {
 test("MCPB build installs the lockfile-defined production dependency tree", async () => {
   const source = await readFile(new URL("scripts/build-mcpb.mjs", root), "utf8");
 
-  assert.match(source, /npm(?:\.cmd)?["']?/);
+  assert.match(source, /process\.env\.npm_execpath/);
+  assert.match(source, /process\.execPath/);
   assert.match(source, /\bci\b/);
   assert.match(source, /--omit=dev/);
   assert.match(source, /path\.join\(root, "integrations", "ppocr"\)/);
   assert.match(source, /ppocrv5_mobile\.py/);
+  assert.doesNotMatch(source, /npm\.cmd/);
   assert.doesNotMatch(source, /["']node_modules["']/);
 });
 

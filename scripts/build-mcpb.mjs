@@ -21,8 +21,15 @@ await mkdir(path.dirname(ppocrTarget), { recursive: true });
 await cp(path.join(root, "integrations", "ppocr"), ppocrTarget, { recursive: true });
 await access(path.join(ppocrTarget, "ppocrv5_mobile.py"));
 
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-const install = spawnSync(npmCommand, ["ci", "--omit=dev", "--ignore-scripts"], {
+const npmExecPath = process.env.npm_execpath;
+if (process.platform === "win32" && !npmExecPath) {
+  throw new Error("build:mcpb must be started through npm so its JavaScript entry point is available");
+}
+const npmCommand = npmExecPath ? process.execPath : "npm";
+const npmArgs = npmExecPath
+  ? [npmExecPath, "ci", "--omit=dev", "--ignore-scripts"]
+  : ["ci", "--omit=dev", "--ignore-scripts"];
+const install = spawnSync(npmCommand, npmArgs, {
   cwd: path.join(stage, "server"),
   env: process.env,
   stdio: "inherit"
