@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/bpc-oss/chrome-faithful/actions/workflows/ci.yml/badge.svg)](https://github.com/bpc-oss/chrome-faithful/actions/workflows/ci.yml)
-![Node](https://img.shields.io/badge/node-%3E%3D20-339933)
+![Node](https://img.shields.io/badge/node-%3E%3D22.12-339933)
 
 [English](README.md) · **简体中文**
 
@@ -171,7 +171,7 @@ await tab.goto("https://example.com/");
 
 ## Codex 兼容性
 
-`src/agent-browser.mjs` 实现 Codex 的 `agent.browsers` 接口。parity 被机制化固定：`compat/` 存放捕获的 API 契约、其 SHA-256 与适配映射；`npm run check:parity` 与 `test/codex-parity-contract.test.mjs` 在任一契约成员缺失、被 stub 或多余时失败。见 [compat/README.md](compat/README.md) 与 [docs/CODEX_PARITY.md](docs/CODEX_PARITY.md)。
+`src/agent-browser.mjs` 实现 Codex 的 `agent.browsers` 接口。parity 被机制化固定：`compat/` 存放本仓库自行编写的功能表面契约、适配映射及其 SHA-256，不再分发已安装产品附带的文档。`npm run check:parity` 与 `test/codex-parity-contract.test.mjs` 在任一契约成员缺失、被 stub 或多余时失败。见 [compat/README.md](compat/README.md) 与 [docs/CODEX_PARITY.md](docs/CODEX_PARITY.md)。
 
 ## 测试
 

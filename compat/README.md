@@ -1,30 +1,22 @@
-# Codex compatibility fixtures
+# Browser compatibility surface
 
-These files pin the `agent.browsers` API surface that `src/agent-browser.mjs`
-implements, so parity is checked mechanically instead of by memory:
+This directory pins the functional `agent.browsers`-style surface implemented
+by `src/agent-browser.mjs` without redistributing bundled plugin documentation:
 
-- `codex-26.721.41059-api.json` — a captured type-declaration contract of the
-  Codex bundled chrome plugin's `agent.browsers` API (method signatures only,
-  no code). Consumed by `scripts/check-codex-parity.mjs` and
-  `test/codex-parity-contract.test.mjs`.
-- `codex-26.721.41059-manifest.json` — provenance + SHA-256 of the contract
-  above. `check-codex-parity.mjs` verifies the hash, so the contract must not
-  be edited without updating this manifest.
-- `codex-adapter-map.json` — maps every contract member to its implementation
-  in this repository. Regenerate with:
+- `browser-surface-contract.json` records repository-authored interface names
+  and the expected member count. It contains no copied declarations, comments,
+  implementation code, or private internals.
+- `codex-adapter-map.json` maps every functional member identifier to its
+  concrete implementation in this repository.
+- `codex-26.721.41059-manifest.json` records the behavioral baseline and the
+  SHA-256 of the adapter map.
 
-  ```bash
-  npm run generate:parity-map
-  ```
+`npm run check:parity` rejects count drift, interface drift, hash drift, and
+missing/no-op/stub mappings. `test/codex-compat-surface.test.mjs` independently
+exercises the concrete runtime objects, so the map is not accepted as evidence
+by itself.
 
-## Regenerating for a newer Codex build
-
-When you want to pin a newer Codex bundled chrome plugin build:
-
-1. Locate the installed docs bundle, e.g.
-   `~/.codex/plugins/cache/openai-bundled/chrome/<version>/docs/api.json`.
-2. Replace `codex-26.721.41059-api.json` with the new contract and update the
-   manifest's `version` and `sha256` (or run the parity check and let it report
-   the expected hash).
-3. Regenerate the adapter map, then run `npm run check:parity` and the full
-   test suite to close gaps in `src/agent-browser.mjs`.
+When the compatibility surface changes, update the repository-authored
+contract and adapter implementation from observable public behavior, update the
+manifest hash, and add or update concrete behavioral tests. Do not copy an
+installed product's documentation bundle into this repository.

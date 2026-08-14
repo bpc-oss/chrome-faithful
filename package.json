@@ -21,7 +21,6 @@
   ],
   "scripts": {
     "build:extension": "node scripts/build-extension-runtime.mjs",
-    "generate:parity-map": "node scripts/generate-codex-adapter-map.mjs",
     "check": "node scripts/check.mjs",
     "check:parity": "node scripts/check-codex-parity.mjs",
     "test": "node scripts/run-unit-tests.mjs",

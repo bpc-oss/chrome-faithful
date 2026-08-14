@@ -3,70 +3,61 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 import {
-  summarizeContract,
+  summarizeAdapterMap,
   validateAdapterMap
 } from "../scripts/check-codex-parity.mjs";
 
-const contract = JSON.parse(await readFile(
-  new URL("../compat/codex-26.721.41059-api.json", import.meta.url),
+const surface = JSON.parse(await readFile(
+  new URL("../compat/browser-surface-contract.json", import.meta.url),
+  "utf8"
+));
+const adapterMap = JSON.parse(await readFile(
+  new URL("../compat/codex-adapter-map.json", import.meta.url),
   "utf8"
 ));
 
-function completeMap(value = "implemented") {
-  return Object.fromEntries(Object.entries(contract.interfaces).map(([interfaceName, members]) => [
-    interfaceName,
-    Object.fromEntries(Object.keys(members).map((memberName) => [
-      memberName,
-      { module: `src/compat/${interfaceName}.mjs`, implementation: value }
-    ]))
-  ]));
+function clonedMap() {
+  return structuredClone(adapterMap);
 }
 
-test("freezes the complete Codex 26.721.41059 public browser contract", () => {
-  assert.deepEqual(
-    summarizeContract(contract),
-    {
-      interfaces: 22,
-      interfaceMembers: 135,
-      types: 58,
-      members: summarizeContract(contract).members
-    }
-  );
+test("freezes the repository-authored browser compatibility surface", () => {
+  const summary = summarizeAdapterMap(adapterMap);
+  assert.equal(summary.interfaces, 22);
+  assert.equal(summary.interfaceMembers, 135);
+  assert.deepEqual(summary.interfaceNames, surface.interfaceNames);
 });
 
 test("accepts a complete concrete adapter map", () => {
-  const result = validateAdapterMap(contract, completeMap());
+  const result = validateAdapterMap(surface, clonedMap());
   assert.equal(result.ok, true);
-  assert.deepEqual(result.missing, []);
   assert.deepEqual(result.invalid, []);
-  assert.deepEqual(result.extras, []);
 });
 
-test("rejects a missing member by exact interface and member name", () => {
-  const adapterMap = completeMap();
-  delete adapterMap.PlaywrightAPI.frameLocator;
-  const result = validateAdapterMap(contract, adapterMap);
+test("rejects a missing member through the pinned surface count", () => {
+  const candidate = clonedMap();
+  delete candidate.PlaywrightAPI.frameLocator;
+  const result = validateAdapterMap(surface, candidate);
   assert.equal(result.ok, false);
-  assert.deepEqual(result.missing, ["PlaywrightAPI.frameLocator"]);
+  assert.equal(result.interfaceMembers, surface.interfaceMembers - 1);
 });
 
 test("rejects no-op, stub, and unsupported mappings", () => {
   for (const implementation of ["noop", "no-op", "stub", "unsupported", "missing"]) {
-    const adapterMap = completeMap();
-    adapterMap.Tab.getJsDialog.implementation = implementation;
-    const result = validateAdapterMap(contract, adapterMap);
+    const candidate = clonedMap();
+    candidate.Tab.getJsDialog.implementation = implementation;
+    const result = validateAdapterMap(surface, candidate);
     assert.equal(result.ok, false);
     assert.deepEqual(result.invalid, ["Tab.getJsDialog"]);
   }
 });
 
-test("rejects extra undeclared members", () => {
-  const adapterMap = completeMap();
-  adapterMap.Tab.notInCodex = {
-    module: "src/compat/tab.mjs",
-    implementation: "notInCodex"
+test("rejects extra undeclared members through the pinned surface count", () => {
+  const candidate = clonedMap();
+  candidate.Tab.notInSurface = {
+    module: "src/agent-browser.mjs",
+    implementation: "ChromeTab.notInSurface"
   };
-  const result = validateAdapterMap(contract, adapterMap);
+  const result = validateAdapterMap(surface, candidate);
   assert.equal(result.ok, false);
-  assert.deepEqual(result.extras, ["Tab.notInCodex"]);
+  assert.equal(result.interfaceMembers, surface.interfaceMembers + 1);
 });

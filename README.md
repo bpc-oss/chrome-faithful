@@ -9,7 +9,7 @@ no Edge, no global mouse/keyboard automation.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/bpc-oss/chrome-faithful/actions/workflows/ci.yml/badge.svg)](https://github.com/bpc-oss/chrome-faithful/actions/workflows/ci.yml)
-![Node](https://img.shields.io/badge/node-%3E%3D20-339933)
+![Node](https://img.shields.io/badge/node-%3E%3D22.12-339933)
 
 **English** · [简体中文](README.zh-CN.md)
 
@@ -275,8 +275,9 @@ await tab.goto("https://example.com/");
 ## Codex compatibility
 
 `src/agent-browser.mjs` implements the Codex `agent.browsers` surface. Parity
-is pinned mechanically: `compat/` holds the captured API contract, its
-SHA-256, and the adapter map; `npm run check:parity` and
+is pinned mechanically: `compat/` holds a repository-authored functional
+surface contract, its adapter-map SHA-256, and the adapter map. It does not
+redistribute bundled product documentation. `npm run check:parity` and
 `test/codex-parity-contract.test.mjs` fail if any contract member is missing,
 stubbed, or extra. See [compat/README.md](compat/README.md) and
 [docs/CODEX_PARITY.md](docs/CODEX_PARITY.md).

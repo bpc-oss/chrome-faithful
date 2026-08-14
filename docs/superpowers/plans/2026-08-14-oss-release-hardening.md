@@ -6,7 +6,7 @@
 
 **Architecture:** Keep the existing MCP/bridge/extension architecture. Add small release-policy helpers and contract tests around it, make public CDP event reads fail closed while documenting raw CDP as a fully trusted capability, replace copied compatibility documentation with a repository-authored surface contract, and make release metadata/build inputs deterministic.
 
-**Tech Stack:** Node.js 20 ESM, `node:test`, GitHub Actions, MV3 Chrome extension, PowerShell installer tests.
+**Tech Stack:** Node.js 22.12+ ESM, `node:test`, GitHub Actions, MV3 Chrome extension, PowerShell installer tests.
 
 ## Global Constraints
 

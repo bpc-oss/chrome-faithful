@@ -5,32 +5,27 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-export function summarizeContract(contract) {
-  const interfaces = Object.keys(contract?.interfaces || {});
-  const members = interfaces.flatMap((interfaceName) =>
-    Object.keys(contract.interfaces[interfaceName] || {}).map((memberName) => ({
+export function summarizeAdapterMap(adapterMap) {
+  const interfaceNames = Object.keys(adapterMap || {});
+  const members = interfaceNames.flatMap((interfaceName) =>
+    Object.keys(adapterMap[interfaceName] || {}).map((memberName) => ({
       interfaceName,
       memberName
     }))
   );
   return {
-    interfaces: interfaces.length,
+    interfaces: interfaceNames.length,
     interfaceMembers: members.length,
-    types: Object.keys(contract?.types || {}).length,
+    interfaceNames,
     members
   };
 }
 
-export function validateAdapterMap(contract, adapterMap) {
-  const summary = summarizeContract(contract);
-  const missing = [];
+export function validateAdapterMap(surface, adapterMap) {
+  const summary = summarizeAdapterMap(adapterMap);
   const invalid = [];
   for (const { interfaceName, memberName } of summary.members) {
-    const entry = adapterMap?.[interfaceName]?.[memberName];
-    if (!entry) {
-      missing.push(`${interfaceName}.${memberName}`);
-      continue;
-    }
+    const entry = adapterMap[interfaceName][memberName];
     if (
       typeof entry.module !== "string" ||
       !entry.module.trim() ||
@@ -41,20 +36,17 @@ export function validateAdapterMap(contract, adapterMap) {
       invalid.push(`${interfaceName}.${memberName}`);
     }
   }
-  const extras = [];
-  for (const [interfaceName, members] of Object.entries(adapterMap || {})) {
-    for (const memberName of Object.keys(members || {})) {
-      if (!contract?.interfaces?.[interfaceName]?.[memberName]) {
-        extras.push(`${interfaceName}.${memberName}`);
-      }
-    }
-  }
+  const expectedInterfaces = [...(surface?.interfaceNames || [])];
+  const actualInterfaces = [...summary.interfaceNames];
+  const surfaceMatches =
+    JSON.stringify(actualInterfaces) === JSON.stringify(expectedInterfaces) &&
+    summary.interfaceMembers === surface?.interfaceMembers;
   return {
-    ok: missing.length === 0 && invalid.length === 0 && extras.length === 0,
+    ok: surfaceMatches && invalid.length === 0,
     ...summary,
-    missing,
-    invalid,
-    extras
+    expectedInterfaces,
+    expectedInterfaceMembers: surface?.interfaceMembers,
+    invalid
   };
 }
 
@@ -63,39 +55,36 @@ async function loadJson(filePath) {
 }
 
 export async function checkParity({
-  contractPath = path.join(root, "compat", "codex-26.721.41059-api.json"),
+  surfacePath = path.join(root, "compat", "browser-surface-contract.json"),
   manifestPath = path.join(root, "compat", "codex-26.721.41059-manifest.json"),
   adapterMapPath = path.join(root, "compat", "codex-adapter-map.json")
 } = {}) {
-  const [rawContract, manifest, adapterMap] = await Promise.all([
-    readFile(contractPath),
+  const [surface, manifest, rawAdapterMap] = await Promise.all([
+    loadJson(surfacePath),
     loadJson(manifestPath),
-    loadJson(adapterMapPath)
+    readFile(adapterMapPath)
   ]);
-  const contract = JSON.parse(rawContract.toString("utf8"));
-  const contractSha256 = createHash("sha256").update(rawContract).digest("hex");
-  const summary = summarizeContract(contract);
+  const adapterMap = JSON.parse(rawAdapterMap.toString("utf8"));
+  const adapterMapSha256 = createHash("sha256").update(rawAdapterMap).digest("hex");
+  const mapping = validateAdapterMap(surface, adapterMap);
   const manifestMatches =
-    contractSha256 === manifest.sha256 &&
-    summary.interfaces === manifest.interfaces &&
-    summary.interfaceMembers === manifest.interfaceMembers &&
-    summary.types === manifest.types;
-  const mapping = validateAdapterMap(contract, adapterMap);
+    adapterMapSha256 === manifest.sha256 &&
+    surface.baselineVersion === manifest.version &&
+    mapping.interfaces === manifest.interfaces &&
+    mapping.interfaceMembers === manifest.interfaceMembers;
   return {
     ok: manifestMatches && mapping.ok,
     baselineVersion: manifest.version,
-    contractSha256,
+    adapterMapSha256,
     manifestMatches,
     expected: {
-      contractSha256: manifest.sha256,
+      adapterMapSha256: manifest.sha256,
       interfaces: manifest.interfaces,
-      interfaceMembers: manifest.interfaceMembers,
-      types: manifest.types
+      interfaceMembers: manifest.interfaceMembers
     },
     actual: {
-      interfaces: summary.interfaces,
-      interfaceMembers: summary.interfaceMembers,
-      types: summary.types
+      interfaces: mapping.interfaces,
+      interfaceMembers: mapping.interfaceMembers
     },
     mapping
   };

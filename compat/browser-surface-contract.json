@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "26.721.41059",
+  "interfaceNames": [
+    "Agent",
+    "Browsers",
+    "Browser",
+    "BrowserUser",
+    "Tabs",
+    "Tab",
+    "ContentAPI",
+    "CUAAPI",
+    "DomCUAAPI",
+    "PlaywrightAPI",
+    "PlaywrightFrameLocator",
+    "PlaywrightLocator",
+    "PlaywrightDownload",
+    "PlaywrightFileChooser",
+    "TabClipboardAPI",
+    "TabDevAPI",
+    "AlertDialog",
+    "BeforeUnloadDialog",
+    "BrowserDocumentation",
+    "ConfirmDialog",
+    "Documentation",
+    "PromptDialog"
+  ],
+  "interfaceMembers": 135,
+  "note": "Repository-authored functional compatibility identifiers only. No copied declarations, comments, implementation code, or bundled plugin documentation."
+}

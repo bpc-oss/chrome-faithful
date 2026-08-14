@@ -28,6 +28,14 @@
       "description": "List exact connected Chrome profiles."
     },
     {
+      "name": "chrome_profile_catalog",
+      "description": "List local Chrome profiles without launching Chrome."
+    },
+    {
+      "name": "chrome_profile_start",
+      "description": "Start one exact local Chrome profile and wait for verified extension registration."
+    },
+    {
       "name": "chrome_selftest",
       "description": "Run a tab-scoped extension and CDP self-test."
     },
@@ -98,6 +106,14 @@
     {
       "name": "chrome_cua_scroll_capture_v2",
       "description": "Capture structured virtual-list data with bounded completion diagnostics."
+    },
+    {
+      "name": "chrome_cua_scroll_capture_v3",
+      "description": "Start a background scroll capture and return a job identifier immediately."
+    },
+    {
+      "name": "chrome_cua_scroll_capture_status_v1",
+      "description": "Read progress or the terminal result for a background scroll capture."
     },
     {
       "name": "chrome_cua_scroll_asset_capture_start_v1",

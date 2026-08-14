@@ -1,8 +1,14 @@
-# Codex Chrome parity contract
+# Browser compatibility contract
 
-Reference: the installed Codex Chrome plugin's `docs/api.json`, version
-`26.721.41059`. The frozen contract contains 22 interfaces, 135 members, and
-58 public types.
+Chrome Faithful implements an `agent.browsers`-style JavaScript surface in
+`src/agent-browser.mjs`. The repository-authored baseline in `compat/` records
+22 functional interfaces and 135 mapped members for compatibility testing.
+It contains identifiers and counts needed by this implementation, not copied
+declarations, comments, implementation code, or bundled product documentation.
+
+The baseline label `26.721.41059` identifies the behavior snapshot used while
+developing the adapter. It is not a claim of endorsement, source compatibility,
+or byte-for-byte identity with another product's private internals.
 
 ## Required architecture
 
@@ -12,76 +18,49 @@ Reference: the installed Codex Chrome plugin's `docs/api.json`, version
 - `chrome.debugger` CDP, with no port 9222/debug profile/copy/Edge fallback.
 - MV3 offscreen WebSocket transport with reconnect and heartbeat.
 - Authenticated localhost multi-profile router.
-- MCP surface for Claude Desktop and WorkBuddy.
+- MCP surface for supported clients.
 - JavaScript `agent.browsers` adapter for existing code.
 - Page `File` + `DataTransfer` upload route.
 - Exact-profile streaming of page-exposed media URLs to absolute local paths,
   with size bounds, MIME checks, and SHA-256 evidence.
 
+## Static contract
+
+- `compat/browser-surface-contract.json` records interface names and the
+  expected member count.
+- `compat/codex-adapter-map.json` maps each functional member identifier to a
+  concrete implementation.
+- `compat/codex-26.721.41059-manifest.json` pins the map hash and counts.
+- `npm run check:parity` rejects count or interface drift, hash drift, and
+  missing, no-op, stubbed, or unsupported mappings.
+- `test/codex-compat-surface.test.mjs` exercises the concrete runtime objects;
+  metadata alone is not accepted as parity evidence.
+
 ## Live release gates
 
-| Gate | Evidence |
+| Gate | Required evidence |
 |---|---|
-| Multi-profile registration | `chrome_profiles` includes every exact profile supplied through `AGENTOS_ACCEPTANCE_PROFILES` |
-| Exact binding | commands sent to one profile never appear in the other |
-| Chrome API readiness | `chrome_selftest` passes tabs and Runtime.evaluate |
-| Background control | create/navigate/read a non-focused tab |
+| Multi-profile registration | `chrome_profiles` includes every exact profile supplied for acceptance |
+| Exact binding | Commands sent to one profile never appear in another |
+| Chrome API readiness | `chrome_selftest` passes tabs and `Runtime.evaluate` |
+| Background control | Create, navigate, and read a non-focused tab |
 | CDP | Runtime, Page, DOM, Input, and screenshot commands pass |
-| Locator surface | all frozen locator members, including iframe, boolean composition, state, trusted click, type, and press pass |
-| Page/event surface | dialogs, downloads, file chooser compatibility, DOM CUA, content export, logs, and session finalization pass |
-| Lifecycle | service-worker suspension does not drop the offscreen connection |
-| Reconnect | bridge restart reconnects both profiles without extension reload |
-| File injection | page sees original filename, byte size, input and change events |
-| Page asset save | selector/property is resolved inside the exact-profile tab; UA/referer/cookies fetch succeeds; saved MIME, bytes, and SHA-256 verify without signed-URL or credential leakage |
-| Consumer isolation | acceptance uses only the plugin's public adapter and imports no external project runtime |
+| Locator surface | Locator composition, iframe, state, trusted click, type, and press pass |
+| Page/event surface | Dialogs, downloads, file chooser compatibility, DOM CUA, content export, logs, and session finalization pass |
+| Lifecycle | Service-worker suspension does not drop the offscreen connection |
+| Reconnect | Bridge restart reconnects selected profiles without extension reload |
+| File injection | Page sees the original filename, byte size, input event, and change event |
+| Page asset save | Exact-profile request context succeeds and saved MIME, bytes, and SHA-256 verify without leaking credentials |
+| Consumer isolation | Acceptance uses only this repository's public adapter |
 
-Static validation does not satisfy these gates. The plugin must report
-`not-live-verified` until all gates pass on the user's actual profiles.
+Static validation does not satisfy these live gates. Historical local runs or
+unpublished report files are not public release evidence. A release should be
+described as `not-live-verified` unless current, reviewable evidence covers the
+target version and environment.
 
-## 2026-07-27 parity acceptance
+## Updating the contract
 
-The `0.3.1` implementation maps every frozen `26.721.41059` interface member
-to a concrete adapter implementation. The static checker rejects missing,
-extra, stubbed, or unsupported mappings.
-
-The live differential fixture passed 16 behavior checks in each selected exact
-profile; see
-`../reports/parity/live-acceptance-0.3.0.json`. It covers navigation,
-self-test, the extension-transport Puppeteer session, locator read/write and
-state, iframe locators, DOM CUA, element inspection and screenshots, trusted
-dialogs, file chooser and download resources, binary clipboard round-trip and
-restore, normalized console logs, navigation events, and content export.
-
-The acceptance report pins source hashes and the installed extension version.
-It proves the declared public behavior against the installed Codex contract;
-it does not claim byte-for-byte identity with private Codex internals and does
-not authorize production publishing.
-
-## Historical 2026-07-25 acceptance
-
-The historical live browser matrix passed on two selected exact profiles; see
-`../reports/live-acceptance.json`. WorkBuddy and Claude Desktop each loaded the
-then-current MCP server and indexed all 18 tools; see
-`../reports/host-acceptance.json`.
-
-This acceptance covers the API surface and runtime behaviors listed above. It
-does not claim identity with Codex internals, and it does not authorize
-production publishing.
-
-That live matrix re-ran tabs, exact binding, self-test, background control,
-locator actions, raw CDP plus events, screenshots, history, clipboard, and page
-`File` injection in both profiles. Current acceptance scripts no longer import
-or depend on any external project runtime.
-
-The durable capture implementation also returns detached-start diagnostics,
-retains its background promise after the MCP response, bounds each page-asset
-request with an abortable timeout, and can rewind a bottom-positioned virtual
-list through serialized tab-scoped CUA wheel events before a resume scan. These
-behaviors prevent request timeout, one hung media response, or stale scroll
-position from silently turning a partial history into complete evidence.
-
-Claude Desktop successfully initialized the same server and completed
-`tools/list` for all 18 tools after restart. Its configured inference gateway
-returned HTTP 502 before the model could perform a second host-originated tool
-invocation, so that provider outage is recorded separately from MCP/browser
-acceptance rather than being reported as a plugin failure.
+Derive changes from observable public behavior and tests. Update the
+repository-authored surface, adapter implementation, manifest hash, and
+concrete behavioral tests together. Do not copy installed documentation bundles
+or private implementation material into this repository.
