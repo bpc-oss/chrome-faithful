@@ -19,6 +19,33 @@ test("cli backend surfaces non-zero exit as SolverBackendError", async () => {
   });
 });
 
+test("cli backend surfaces spawn ENOENT as SolverBackendError", async () => {
+  const backend = new CliBackend({ command: "definitely-not-a-real-binary-xyz", args: [], timeoutMs: 3000 });
+  await assert.rejects(() => backend.status(), (error) => {
+    assert.ok(error instanceof SolverBackendError);
+    assert.match(error.message, /spawn failed/);
+    return true;
+  });
+});
+
+test("cli backend kills a hung child and reports a timeout", async () => {
+  const backend = new CliBackend({ command: "node", args: ["-e", "setTimeout(()=>{}, 5000)"], timeoutMs: 800 });
+  const started = Date.now();
+  await assert.rejects(() => backend.status(), (error) => {
+    assert.ok(error instanceof SolverBackendError);
+    assert.match(error.message, /timed out/);
+    return true;
+  });
+  assert.ok(Date.now() - started < 4000, "timeout must fire before the child finishes");
+});
+
+test("cli backend falls back to raw stdout when the output is not JSON", async () => {
+  const backend = new CliBackend({ command: "node", args: ["-e", "process.stdout.write('just text')"], timeoutMs: 3000 });
+  const result = await backend.status();
+  assert.equal(result.raw, true);
+  assert.equal(result.text, "just text");
+});
+
 test("http backend posts JSON and parses the response", async () => {
   const server = createServer((req, res) => {
     let body = "";
@@ -36,6 +63,25 @@ test("http backend posts JSON and parses the response", async () => {
     const result = await backend.solveImage({ imagePath: "C:\\tmp\\cap.png" });
     assert.equal(result.action, "solve-image");
     assert.equal(result.text, "hello");
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("http backend surfaces non-OK status as SolverBackendError", async () => {
+  const server = createServer((_req, res) => {
+    res.statusCode = 500;
+    res.end("boom");
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  try {
+    const backend = new HttpBackend({ url: `http://127.0.0.1:${port}`, timeoutMs: 5000 });
+    await assert.rejects(() => backend.solveImage({ imagePath: "C:\\tmp\\cap.png" }), (error) => {
+      assert.ok(error instanceof SolverBackendError);
+      assert.match(error.message, /http 500/);
+      return true;
+    });
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

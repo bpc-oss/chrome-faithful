@@ -2,7 +2,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { mkdir, writeFile } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { dirname, isAbsolute } from "node:path";
 import { readFile } from "node:fs/promises";
 import { loadConfig } from "./config.mjs";
@@ -31,6 +31,7 @@ import {
   dismissBenignOverlays,
   solveCheckbox,
   solveSlider,
+  SLIDER_VERIFY_DEFAULT as solveSliderVerifyDefault,
   captureChallengeAssets,
   runSolvePipeline,
   buildHandoffMessage,
@@ -711,7 +712,10 @@ const schemas = [
     description: "Return the current verification hold state for one exact profile (idle / challenge_detected / waiting_for_human / cleared) plus recent transitions.",
     inputSchema: {
       type: "object",
-      properties: { profileName: { type: "string" } },
+      properties: {
+        profileName: { type: "string" },
+        limit: { type: "integer", minimum: 1, maximum: 50, default: 10, description: "Number of recent hold transitions to return." }
+      },
       required: ["profileName"],
       additionalProperties: false
     }
@@ -764,7 +768,6 @@ const schemas = [
       properties: {
         profileName: { type: "string" },
         tabId: { type: ["string", "number"] },
-        challengeType: { type: "string", enum: ["recaptcha-v2", "hcaptcha", "turnstile"], default: "turnstile" },
         timeoutMs: { type: "integer", minimum: 1000, maximum: 120000 }
       },
       required: ["profileName", "tabId"],
@@ -1436,7 +1439,10 @@ server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
     if (params.name.startsWith("chrome_verification")) {
       const profileName = args.profileName;
       if (params.name === "chrome_verification_status") {
-        return textResult(verification.status(profileName));
+        return textResult({
+          ...verification.status(profileName),
+          recentTransitions: verification.recentTransitions(args.limit ?? 10)
+        });
       }
       if (params.name === "chrome_verification_resume") {
         return textResult(verification.resume(profileName, { reason: args.reason || "manual" }));
@@ -1447,11 +1453,12 @@ server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
       const drag = async ({ path, delays }) => tab.cua.drag({ path, delays });
       const screenshot = async ({ clip, savePath }) => {
         const bytes = await tab.screenshot({ clip });
-        if (!savePath) return { savedPath: null, bytes: bytes.length };
+        const sha256 = createHash("sha256").update(bytes).digest("hex");
+        if (!savePath) return { savedPath: null, bytes: bytes.length, sha256 };
         if (!isAbsolute(savePath)) throw new Error("chrome_verification capture savePath must be absolute");
         await mkdir(dirname(savePath), { recursive: true });
         await writeFile(savePath, bytes);
-        return { savedPath: savePath, bytes: bytes.length };
+        return { savedPath: savePath, bytes: bytes.length, sha256 };
       };
       if (params.name === "chrome_verification_detect") {
         const detection = await detectChallenge({ evaluate, tabId: tab.id });
@@ -1466,6 +1473,7 @@ server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
       if (params.name === "chrome_verification_solve_checkbox") {
         const result = await solveCheckbox({ evaluate, click, timeoutMs: args.timeoutMs });
         if (result.solved) verification.resume(profileName, { reason: "checkbox solved" });
+        else verification.handoff(profileName, { type: "recaptcha-v2" });
         return textResult({ profileName, ...result });
       }
       if (params.name === "chrome_verification_solve_slider") {
@@ -1474,31 +1482,31 @@ server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
           drag,
           selector: args.selector,
           gap: args.gap,
-          verifyExpression: args.verifyExpression,
+          verifyExpression: args.verifyExpression ?? solveSliderVerifyDefault,
           timeoutMs: args.timeoutMs
         });
         if (result.solved) verification.resume(profileName, { reason: "slider solved" });
+        else verification.handoff(profileName, { type: "slider" });
         return textResult({ profileName, ...result });
       }
       if (params.name === "chrome_verification_capture") {
         const result = await captureChallengeAssets({ evaluate, screenshot, savePath: args.savePath });
-        let answer = null;
-        const wantImage = args.mode !== "audio";
-        const wantAudio = args.mode !== "image";
+        const backendAnswers = [];
         if (result.captured && args.solve !== false && verificationBackend) {
           try {
-            if (wantImage && result.image?.path) {
+            if (args.mode !== "audio" && result.image?.path) {
               const backendResult = await verificationBackend.solveImage({ imagePath: result.image.path });
-              answer = backendResult?.text ?? backendResult ?? null;
-            } else if (wantAudio && (result.audioSrc || result.audioLink)) {
+              backendAnswers.push({ kind: "image", text: backendResult?.text ?? backendResult ?? null });
+            }
+            if (args.mode !== "image" && (result.audioSrc || result.audioLink)) {
               const backendResult = await verificationBackend.solveAudio({ audioUrl: result.audioSrc || result.audioLink });
-              answer = backendResult?.text ?? backendResult ?? null;
+              backendAnswers.push({ kind: "audio", text: backendResult?.text ?? backendResult ?? null });
             }
           } catch (error) {
-            answer = { error: error.message };
+            backendAnswers.push({ error: error.message });
           }
         }
-        return textResult({ profileName, ...result, backendAnswer: answer });
+        return textResult({ profileName, ...result, backendAnswers: backendAnswers.length ? backendAnswers : null });
       }
       if (params.name === "chrome_verification_solve") {
         const detection = args.challenge
@@ -1507,17 +1515,25 @@ server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
         if (!detection.detected) return textResult({ profileName, detected: false, result: "no_challenge" });
         const challenge = detection.challenges[0];
         verification.report(profileName, challenge);
-        const result = await runSolvePipeline({
-          challenge,
-          evaluate,
-          click,
-          drag,
-          screenshot,
-          savePath: args.savePath,
-          backend: verificationBackend,
-          verifyCleared: args.verifyCleared !== false,
-          timeoutMs: args.timeoutMs
-        });
+        let result;
+        try {
+          result = await runSolvePipeline({
+            challenge,
+            evaluate,
+            click,
+            drag,
+            screenshot,
+            savePath: args.savePath,
+            backend: verificationBackend,
+            verifyCleared: args.verifyCleared !== false,
+            timeoutMs: args.timeoutMs
+          });
+        } catch (error) {
+          // A solver crash must not leave the profile stuck in
+          // challenge_detected; roll the hold back and surface the error.
+          verification.resume(profileName, { reason: "solver_error" });
+          throw error;
+        }
         if (result.solved) verification.resume(profileName, { reason: `solved ${challenge.type}` });
         else verification.handoff(profileName, challenge);
         return textResult({

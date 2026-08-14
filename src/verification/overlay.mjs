@@ -2,6 +2,8 @@
 // popups. Conservative allowlist only — never clicks anything that looks like
 // a challenge, and never more than `maxDismissals` elements per call.
 
+import { VISIBLE_FN } from "./expr.mjs";
+
 export const BENIGN_DISMISS_TEXT = [
   "accept", "accept all", "accept all cookies", "同意", "接受", "全部接受",
   "got it", "知道了", "skip", "跳过", "skip tour", "no thanks", "不用了",
@@ -10,11 +12,7 @@ export const BENIGN_DISMISS_TEXT = [
 
 export const DISMISS_EXPRESSION = `(() => {
   const allow = new Set(${JSON.stringify(BENIGN_DISMISS_TEXT)});
-  const visible = (el) => {
-    const r = el.getBoundingClientRect();
-    const s = getComputedStyle(el);
-    return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none" && s.opacity !== "0";
-  };
+  ${VISIBLE_FN}
   const candidates = [];
   for (const el of document.querySelectorAll("button, [role=button], a, [onclick]")) {
     const text = (el.innerText || el.textContent || "").trim().toLowerCase();

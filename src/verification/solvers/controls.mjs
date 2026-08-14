@@ -5,13 +5,10 @@
 // checkbox > widget container. The first match is clicked at its exact center
 // in page coordinates.
 
+import { VISIBLE_FN } from "../expr.mjs";
+
 export const CLICKABLE_CONTROL_EXPRESSION = `(() => {
-  const visible = (el) => {
-    if (!el) return false;
-    const r = el.getBoundingClientRect();
-    const s = getComputedStyle(el);
-    return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none" && s.opacity !== "0";
-  };
+  ${VISIBLE_FN}
   const candidates = [];
   const push = (x, y, kind, score) => candidates.push({ x, y, kind, score });
   for (const frame of document.querySelectorAll("iframe")) {

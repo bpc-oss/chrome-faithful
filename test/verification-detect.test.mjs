@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { classifyChallenges, detectChallenge, DETECT_EXPRESSION, CHALLENGE_TEXT_SIGNALS, PROVIDER_PATTERNS } from "../src/verification/detect.mjs";
+import { WIDGET_CONTAINER_SELECTOR, STATIC_MARKER_PATTERN } from "../src/verification/expr.mjs";
 
 test("visible recaptcha v2 iframe is detected with high confidence", () => {
   const result = classifyChallenges({
@@ -115,6 +116,38 @@ test("pending widget is classified ahead of a text signal", () => {
   assert.equal(result.detected, true);
   assert.equal(result.challenges[0].type, "turnstile");
   assert.equal(result.challenges[0].pendingRender, true);
+});
+
+test("the reCAPTCHA badge is never treated as a pending widget", () => {
+  assert.ok(STATIC_MARKER_PATTERN.test("grecaptcha-badge"), "badge class must be recognized as a static marker");
+  assert.ok(!WIDGET_CONTAINER_SELECTOR.includes("[class*=captcha]"), "widget selector must not match the badge by substring");
+  const result = classifyChallenges({
+    visibleFrames: [],
+    allFrames: [],
+    textSample: "",
+    title: "",
+    tokenPresent: false,
+    tokenPopulated: false,
+    tokenLength: 0,
+    pendingWidgets: ["grecaptcha-badge"]
+  });
+  assert.equal(result.detected, false);
+  assert.equal(result.challenges.length, 0);
+});
+
+test("a badge-only page with a populated token is resolved, not detected", () => {
+  const result = classifyChallenges({
+    visibleFrames: [],
+    allFrames: [],
+    textSample: "",
+    title: "",
+    tokenPresent: true,
+    tokenPopulated: true,
+    tokenLength: 21,
+    pendingWidgets: ["grecaptcha-badge"]
+  });
+  assert.equal(result.detected, false);
+  assert.equal(result.resolved, true);
 });
 
 test("clean page is not detected", () => {

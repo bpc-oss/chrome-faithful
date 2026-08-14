@@ -122,6 +122,38 @@
     {
       "name": "chrome_screenshot",
       "description": "Capture a tab screenshot as PNG."
+    },
+    {
+      "name": "chrome_verification_detect",
+      "description": "Detect and classify human-verification challenges in one exact profile tab."
+    },
+    {
+      "name": "chrome_verification_status",
+      "description": "Return the verification hold state and recent transitions for one exact profile."
+    },
+    {
+      "name": "chrome_verification_resume",
+      "description": "Clear the verification hold for one exact profile."
+    },
+    {
+      "name": "chrome_verification_solve",
+      "description": "Detect a challenge and run the matching solve strategy, with handoff on failure."
+    },
+    {
+      "name": "chrome_verification_solve_checkbox",
+      "description": "Click the visible challenge checkbox and wait for the hidden response token."
+    },
+    {
+      "name": "chrome_verification_solve_slider",
+      "description": "Drag a slider handle with a humanized trajectory and verify acceptance."
+    },
+    {
+      "name": "chrome_verification_capture",
+      "description": "Capture challenge image/audio assets for an external OCR/ASR backend."
+    },
+    {
+      "name": "chrome_verification_dismiss_overlays",
+      "description": "Dismiss benign cookie/onboarding overlays using a conservative allowlist."
     }
   ],
   "keywords": [

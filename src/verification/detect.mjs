@@ -3,6 +3,8 @@
 // and known challenge page patterns. Classification is heuristic; `confidence`
 // lets callers choose between auto-solve, handoff, or ignore.
 
+import { VISIBLE_FN, TOKEN_INPUT_SELECTOR, WIDGET_CONTAINER_SELECTOR, STATIC_MARKER_PATTERN } from "./expr.mjs";
+
 export const PROVIDER_PATTERNS = [
   { provider: "recaptcha-v2", interactive: true, patterns: [/^https:\/\/www\.google\.com\/recaptcha\/api2\//, /^https:\/\/recaptcha\.google\.com\//] },
   { provider: "recaptcha-v3", interactive: false, patterns: [/recaptcha\/api3\//] },
@@ -15,32 +17,28 @@ export const PROVIDER_PATTERNS = [
 
 export const CHALLENGE_TEXT_SIGNALS = [
   "验证码", "人机验证", "请完成验证", "拖动滑块", "滑动验证", "点击完成验证",
-  "verify you are human", "security check", "captcha", "i'm not a robot",
+  "verify you are human", "security check", "i'm not a robot",
+  "enter the captcha", "captcha code", "captcha required", "captcha verification",
   "无法验证", "验证失败", "正在进行安全验证", "cf-chl", "turnstile",
   "not a robot", "are you human"
 ];
 
 // Runs inside the tab; returns raw signals for classifyChallenges().
 export const DETECT_EXPRESSION = `(() => {
-  const visible = (el) => {
-    if (!el) return false;
-    const r = el.getBoundingClientRect();
-    const s = getComputedStyle(el);
-    return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none" && s.opacity !== "0";
-  };
+  ${VISIBLE_FN}
   const allFrames = [...document.querySelectorAll("iframe")].map((f) => f.src || "").filter(Boolean);
   const visibleFrames = [...document.querySelectorAll("iframe")].filter(visible).map((f) => f.src || "").filter(Boolean);
   const text = [document.title, document.body ? document.body.innerText.slice(0, 3000) : ""].join("\\n");
-  const tokenInputs = [...document.querySelectorAll("input[name*='-response'], input[name*='captcha'], textarea.g-recaptcha-response")];
+  const tokenInputs = [...document.querySelectorAll(${JSON.stringify(TOKEN_INPUT_SELECTOR)})];
   const tokenValues = tokenInputs.map((el) => el.value || "").filter((v) => v.length > 0);
-  const checkboxFrames = [...document.querySelectorAll("iframe")].filter(visible).map((f) => f.src || "");
-  // Challenge widgets that rendered a container but no provider iframe and no
-  // populated token: the widget is stuck in a pre-render handshake (a real,
-  // commonly observed Turnstile state on flaky networks).
-  const widgetContainers = [...document.querySelectorAll(".cf-turnstile, .g-recaptcha, [class*=turnstile], [class*=captcha]")].filter(visible);
+  // Real challenge widgets only. The ubiquitous reCAPTCHA badge
+  // (grecaptcha-badge) is a static marker and must never count as a widget.
+  const widgetContainers = [...document.querySelectorAll(${JSON.stringify(WIDGET_CONTAINER_SELECTOR)})]
+    .filter((w) => !new RegExp(${JSON.stringify(STATIC_MARKER_PATTERN.source)}, "i").test((w.className || "").toString()))
+    .filter(visible);
   const pendingWidgets = widgetContainers.filter((w) => {
     const hasIframe = !!w.querySelector("iframe");
-    const input = w.querySelector("input[name*='-response'], input[name*='captcha']");
+    const input = w.querySelector(${JSON.stringify(TOKEN_INPUT_SELECTOR)});
     return !hasIframe && !(input && input.value);
   }).map((w) => (w.className || "").toString()).filter(Boolean);
   return {
@@ -48,7 +46,6 @@ export const DETECT_EXPRESSION = `(() => {
     title: document.title,
     allFrames,
     visibleFrames,
-    checkboxFrames,
     textSample: text.slice(0, 1500),
     tokenPresent: tokenInputs.length > 0,
     tokenPopulated: tokenValues.length > 0,
@@ -88,13 +85,15 @@ export function classifyChallenges(page) {
   const textHits = CHALLENGE_TEXT_SIGNALS.filter((signal) => text.includes(signal.toLowerCase()));
   // Widget rendered but no provider iframe and no token: stuck pre-render
   // handshake (commonly Turnstile on flaky networks). More specific than a
-  // bare text signal, so it is classified first.
-  if (challenges.length === 0 && (page.pendingWidgets || []).length > 0) {
-    const joined = page.pendingWidgets.join(" ").toLowerCase();
+  // bare text signal, so it is classified first. Static provider markers
+  // (e.g. the reCAPTCHA badge) are filtered again here as defense in depth.
+  const pendingClasses = (page.pendingWidgets || []).filter((c) => !STATIC_MARKER_PATTERN.test(c));
+  if (challenges.length === 0 && pendingClasses.length > 0) {
+    const joined = pendingClasses.join(" ").toLowerCase();
     const type = /turnstile|cf-/.test(joined) ? "turnstile"
       : /recaptcha|g-recaptcha/.test(joined) ? "recaptcha-v2"
       : "generic";
-    push({ type, provider: "widget-pending", confidence: 0.6, interactive: true, frameUrl: null, pendingRender: true, widgetClasses: page.pendingWidgets });
+    push({ type, provider: "widget-pending", confidence: 0.6, interactive: true, frameUrl: null, pendingRender: true, widgetClasses: pendingClasses });
   }
   // Text signals alone are weak evidence; a populated token means the widget
   // already completed, so suppress the text-signal path in that case.

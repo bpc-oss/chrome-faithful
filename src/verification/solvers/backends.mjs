@@ -120,10 +120,16 @@ export class HttpBackend {
   async locateGap({ imagePath }) { return this.request({ action: "locate-gap", imagePath }); }
 }
 
+// Single factory: accepts a config object ({type:"cli"|"http", ...}), a plain
+// string (command line), a "cli:"-prefixed command line, or an http(s) URL.
 export function createBackend(config) {
   if (!config) return null;
   if (typeof config === "string") {
-    const [command, ...args] = config.split(/\s+/);
+    if (config.startsWith("http://") || config.startsWith("https://")) {
+      return new HttpBackend({ url: config });
+    }
+    const spec = config.startsWith("cli:") ? config.slice(4) : config;
+    const [command, ...args] = spec.split(/\s+/).filter(Boolean);
     return new CliBackend({ command, args });
   }
   if (config.type === "cli") return new CliBackend(config);
@@ -131,15 +137,9 @@ export function createBackend(config) {
   throw new SolverBackendError(`unknown backend type: ${config.type}`);
 }
 
-// Parse an environment-style spec: "http://127.0.0.1:18001",
+// Environment-style alias of createBackend: "http://127.0.0.1:18001",
 // "cli:python scripts/verification/captcha-backend-adapter.py", or a bare
 // command line. Empty/undefined -> null (no backend).
 export function createBackendFromEnv(value) {
-  if (!value) return null;
-  if (value.startsWith("http://") || value.startsWith("https://")) {
-    return new HttpBackend({ url: value });
-  }
-  const spec = value.startsWith("cli:") ? value.slice(4) : value;
-  const [command, ...args] = spec.split(/\s+/).filter(Boolean);
-  return new CliBackend({ command, args });
+  return createBackend(value);
 }

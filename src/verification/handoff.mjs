@@ -24,6 +24,10 @@ export const CHALLENGE_GUIDANCE = {
     "The Turnstile widget loaded but its challenge frame did not render — usually a network/Cloudflare handshake stall.",
     "Reload the page once and retry, or complete the challenge manually in the visible browser window."
   ],
+  "recaptcha-v2-pending": [
+    "A reCAPTCHA widget is present but its challenge frame did not render — usually a network/Google handshake stall.",
+    "Reload the page once and retry, or complete the challenge manually in the visible browser window."
+  ],
   geetest: [
     "Drag the slider to align the gap in the puzzle image.",
     "The gap position can be located automatically by the opencv backend if configured."

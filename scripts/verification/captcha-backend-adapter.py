@@ -33,6 +33,10 @@ def _load_connector():
 
 
 def _standalone_status():
+    # Preferred when the Agent OS captcha stack (bridge.captcha_connector) is
+    # importable; these standalone fallbacks keep the adapter usable without
+    # that machine-specific module. They are intentionally simpler than the
+    # connector's own fallbacks (which remain the higher-fidelity path).
     report = {
         "backend": "standalone",
         "whisper": False,

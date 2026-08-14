@@ -20,3 +20,6 @@ __pycache__/
 
 # Scratch
 tmp/
+
+# Live-test evidence output
+scripts/verification/live-tests/evidence/

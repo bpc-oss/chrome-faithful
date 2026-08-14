@@ -131,17 +131,22 @@ profile (`scripts/verification/live-tests/`):
 | Local page, always-pass test sitekey `1x00000000000000000000AA` | **`resolved: true`** — the populated token is correctly recognized as a completed widget, not a blocker. |
 | Local page, forced-interactive sitekey `3x00000000000000000000FF` | **`widget_pending_render`** — api.js loaded, `window.turnstile` API present, but the challenge iframe never renders and the token stays empty. The solver now reports this precise diagnosis instead of a misleading timeout. |
 | Local click-to-pass simulation ("Verify you are human" button that sets a token) | **`solved: true`** — detection flags the text signal, the pipeline clicks the visible verify button (`click_challenge_control`, kind `verify-button`), the token populates, and re-detection reports `resolved: true`. This is the "one click and it passes" scenario the user reported; the generic path previously handed off without ever clicking. |
+| Local badge-only page (`.grecaptcha-badge`, no widget) | **`detected: false`** — the reCAPTCHA badge is excluded from widget detection, and the bare text signal "captcha" was removed (it matched benign "protected by reCAPTCHA" copy), so badge-only pages are never reported as challenges. |
 | Diagnostic probe | `.cf-turnstile` container exists (70 px tall) with only an empty hidden `cf-turnstile-response` input; `frames: []`; no shadow root. Matches the earlier documented finding that Cloudflare's handshake stalls in this environment/profile. |
 
-Live findings drove four fixes: (1) detection now distinguishes *resolved* /
+Live findings drove five fixes: (1) detection now distinguishes *resolved* /
 *pending-render* / *active provider iframe* states (pending-widget classified
-before text signals, text signals suppressed when a token is populated);
-(2) `solveCheckbox` reports `widget_pending_render` when the challenge frame
-never appears; (3) a new generic **click-first** path
+before text signals, text signals suppressed when a token is populated, and
+the bare "captcha" text signal removed to avoid badge/benign-copy false
+positives); (2) `solveCheckbox` reports `widget_pending_render` when the
+challenge frame never appears; (3) a generic **click-first** path
 (`clickChallengeControl`) clicks the visible challenge control (provider
 iframe center preferred over wide container centers, "Verify you are human" /
-"验证" / "继续" buttons, challenge checkboxes) before escalating;
-(4) handoff carries reload-and-retry guidance for the pending-render state.
+"验证" / "继续" buttons, challenge checkboxes) before escalating; (4) the
+reCAPTCHA badge (`.grecaptcha-badge`) is excluded from widget detection both
+in the page expression and in the classifier; (5) handoff carries
+reload-and-retry guidance for the pending-render state, including a
+reCAPTCHA-pending variant.
 
 ## Known limits and follow-ups
 

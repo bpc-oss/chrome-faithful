@@ -1,47 +1,23 @@
 // Checkbox challenge solver (reCAPTCHA v2 / Cloudflare Turnstile visible
-// checkbox): locate the visible widget, click it with a human-like jittered
-// click, then poll until the hidden response token input is populated.
-// Mirrors the revenue-trial `_wait_for_turnstile_token` approach.
+// checkbox): locate the visible challenge control, click it, then poll until
+// the hidden response token input is populated. Mirrors the revenue-trial
+// `_wait_for_turnstile_token` approach.
 
 import { pollUntil } from "../wait.mjs";
-import { clickChallengeControl, CLICKABLE_CONTROL_EXPRESSION } from "./controls.mjs";
-
-export { CLICKABLE_CONTROL_EXPRESSION };
-
-export const CHECKBOX_LOCATE_EXPRESSION = `(() => {
-  const visible = (el) => {
-    if (!el) return false;
-    const r = el.getBoundingClientRect();
-    const s = getComputedStyle(el);
-    return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none" && s.opacity !== "0";
-  };
-  const candidates = [];
-  const push = (el, kind) => {
-    const r = el.getBoundingClientRect();
-    candidates.push({ x: r.left + r.width / 2, y: r.top + r.height / 2, kind, width: r.width, height: r.height });
-  };
-  for (const el of document.querySelectorAll(".g-recaptcha, #g-recaptcha, .cf-turnstile, #cf-turnstile, [class*=challenge-checkbox], [class*=captcha-checkbox], .rc-anchor")) {
-    if (visible(el)) push(el, "widget");
-  }
-  for (const el of document.querySelectorAll("iframe")) {
-    const src = el.src || "";
-    if (/recaptcha|hcaptcha|turnstile|challenges\.cloudflare/.test(src) && visible(el)) push(el, "provider-frame");
-  }
-  candidates.sort((a, b) => (a.kind === "provider-frame" ? 1 : 0) - (b.kind === "provider-frame" ? 1 : 0));
-  return candidates[0] || null;
-})()`;
+import { clickChallengeControl } from "./controls.mjs";
+import { TOKEN_INPUT_SELECTOR, WIDGET_CONTAINER_SELECTOR } from "../expr.mjs";
 
 export const TOKEN_READ_EXPRESSION = `(() => {
-  const inputs = [...document.querySelectorAll("input[name*='-response'], textarea.g-recaptcha-response, input[name*='captcha']")];
+  const inputs = [...document.querySelectorAll(${JSON.stringify(TOKEN_INPUT_SELECTOR)})];
   const values = inputs.map((el) => el.value || "").filter((v) => v.length > 0);
   return values[0] || "";
 })()`;
 
 export const WIDGET_STATE_EXPRESSION = `(() => {
-  const widget = document.querySelector(".cf-turnstile, #cf-turnstile, .g-recaptcha");
+  const widget = document.querySelector(${JSON.stringify(WIDGET_CONTAINER_SELECTOR)});
   if (!widget) return null;
   const iframe = widget.querySelector("iframe");
-  const input = widget.querySelector("input[name*='-response'], input[name*='captcha']");
+  const input = widget.querySelector(${JSON.stringify(TOKEN_INPUT_SELECTOR)});
   return {
     hasIframe: !!iframe,
     tokenPopulated: !!(input && input.value),

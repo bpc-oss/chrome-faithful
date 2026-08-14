@@ -18,17 +18,12 @@ export async function pollUntil({ fn, predicate, timeoutMs = 30000, intervalMs =
   const deadline = Date.now() + Math.min(300000, Math.max(1000, Number(timeoutMs) || 30000));
   let interval = Math.min(5000, Math.max(20, Number(intervalMs) || 500));
   let lastValue;
-  let attempts = 0;
-  let failures = 0;
   for (;;) {
-    attempts += 1;
     let value;
     try {
       value = await fn();
       lastValue = value;
-      failures = 0;
     } catch (error) {
-      failures += 1;
       if (Date.now() >= deadline) {
         throw new PollTimeoutError(`${label} timed out after ${timeoutMs}ms (last error: ${error.message})`, lastValue);
       }

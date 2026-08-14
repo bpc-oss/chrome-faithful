@@ -4,21 +4,16 @@
 // and JavaScript agents. External recognition (OCR/ASR/gap) is optional via a
 // backend.
 
-import { solveCheckbox } from "./solvers/checkbox.mjs";
+import { solveCheckbox, TOKEN_READ_EXPRESSION } from "./solvers/checkbox.mjs";
 import { clickChallengeControl } from "./solvers/controls.mjs";
 import { solveSlider, SLIDER_VERIFY_DEFAULT } from "./solvers/slider.mjs";
 import { captureChallengeAssets } from "./solvers/capture.mjs";
 import { waitForChallengeCleared, pollUntil } from "./wait.mjs";
+import { classifyChallenges, DETECT_EXPRESSION } from "./detect.mjs";
 
 const CHECKBOX_TYPES = new Set(["recaptcha-v2", "hcaptcha", "turnstile"]);
 const SLIDER_TYPES = new Set(["geetest", "slider", "vaptcha"]);
 const TOKEN_AFTER_CLICK_MIN = 10;
-
-const TOKEN_READ = `(() => {
-  const inputs = [...document.querySelectorAll("input[name*='-response'], textarea.g-recaptcha-response, input[name*='captcha']")];
-  const values = inputs.map((el) => el.value || "").filter((v) => v.length > 0);
-  return values[0] || "";
-})()`;
 
 export async function runSolvePipeline({
   challenge,
@@ -77,7 +72,7 @@ export async function runSolvePipeline({
     if (control.clicked) {
       try {
         token = await pollUntil({
-          fn: () => evaluate(TOKEN_READ),
+          fn: () => evaluate(TOKEN_READ_EXPRESSION),
           predicate: (value) => typeof value === "string" && value.length >= TOKEN_AFTER_CLICK_MIN,
           timeoutMs: Math.min(15000, Number(timeoutMs) || 20000),
           intervalMs: 700,
@@ -108,8 +103,11 @@ export async function runSolvePipeline({
   let cleared = null;
   if (verifyCleared && outcome?.solved) {
     try {
+      // Use the module's own detection semantics: cleared means the page no
+      // longer reports a challenge (detected:false includes the resolved
+      // case, since resolved requires zero challenges).
       const result = await waitForChallengeCleared(
-        () => evaluate(`(() => { const text = document.body ? document.body.innerText : ""; const hasWidget = !!document.querySelector("[class*=captcha], [class*=challenge], iframe[src*='recaptcha'], iframe[src*='turnstile'], iframe[src*='hcaptcha']"); return { detected: hasWidget || /captcha|验证码|验证失败|请完成验证/i.test(text) }; })()`),
+        async () => classifyChallenges(await evaluate(DETECT_EXPRESSION)),
         { timeoutMs: Math.min(60000, timeoutMs + 10000), label: "challenge clear" }
       );
       cleared = result.detected === false;

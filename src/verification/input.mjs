@@ -107,9 +107,11 @@ export function dragDelays(points, { totalMs = 450, seed = 3 } = {}) {
 
 /**
  * Full pipeline for a plausible human drag: bezier path, jitter, monotonic X,
- * and per-point delays. Returns { points, delays }.
+ * and per-point delays. Returns { points, delays }. Only the seed is exposed;
+ * the trajectory constants are internal defaults tuned for typical slider
+ * widgets.
  */
-export function humanizeDrag(from, to, { steps = 28, bend = 0.3, jitter = 1.4, totalMs = 480, seed = 11 } = {}) {
-  const path = clampMonotonicX(addJitter(bezierPath(from, to, { steps, bend, seed }), { amount: jitter, seed: seed + 1 }));
-  return { points: path, delays: dragDelays(path, { totalMs, seed: seed + 2 }) };
+export function humanizeDrag(from, to, { seed = 11 } = {}) {
+  const path = clampMonotonicX(addJitter(bezierPath(from, to, { steps: 28, bend: 0.3, seed }), { amount: 1.4, seed: seed + 1 }));
+  return { points: path, delays: dragDelays(path, { totalMs: 480, seed: seed + 2 }) };
 }

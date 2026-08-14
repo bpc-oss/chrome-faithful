@@ -5,13 +5,10 @@
 
 import { humanizeDrag } from "../input.mjs";
 import { pollUntil } from "../wait.mjs";
+import { VISIBLE_FN } from "../expr.mjs";
 
 export const SLIDER_LOCATE_EXPRESSION = (selector) => `(() => {
-  const visible = (el) => {
-    const r = el.getBoundingClientRect();
-    const s = getComputedStyle(el);
-    return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none";
-  };
+  ${VISIBLE_FN}
   const handle = ${selector ? `document.querySelector(${JSON.stringify(selector)})` : `[...document.querySelectorAll("div, span, img, button")].find((el) => {
     const cls = (el.className || "").toString();
     const label = (el.getAttribute("aria-label") || "").toLowerCase();
@@ -57,6 +54,12 @@ export async function solveSlider({
   }
   const from = { x: located.handleCenter.x, y: located.handleCenter.y };
   const to = { x: targetX, y: located.handleCenter.y };
+  // A gap behind the handle is a degenerate configuration (e.g. a gap offset
+  // measured against the wrong coordinate space); fail closed instead of
+  // dragging backwards or producing a zero-distance drag.
+  if (to.x < from.x) {
+    return { solved: false, reason: "slider_target_behind_handle", from, to };
+  }
   const effectiveSeed = seed ?? (Date.now() & 0x7fffffff) >>> 0;
   const { points, delays } = humanizeDrag(from, to, { seed: effectiveSeed });
 
@@ -78,5 +81,5 @@ export async function solveSlider({
       verified = false;
     }
   }
-  return { solved: true, ...attempted, verified };
+  return { solved: verifyExpression ? verified === true : true, ...attempted, verified };
 }

@@ -80,7 +80,7 @@ Chrome Faithful is the version with no trade-offs:
   with resilient failover.
 - `src/chrome-profile-launcher.mjs` — exact local Profile discovery and
   ordinary Chrome startup with bounded extension-registration confirmation.
-- `src/mcp-server.mjs` — the MCP tool surface (29 tools).
+- `src/mcp-server.mjs` — the MCP tool surface (37 tools).
 - `src/agent-browser.mjs` — JavaScript `agent.browsers` compatibility adapter.
 - `src/file-injection.mjs`, `src/page-asset.mjs`, `src/scroll-capture.mjs`,
   `src/scroll-asset-capture.mjs`, `src/network-request.mjs`,
