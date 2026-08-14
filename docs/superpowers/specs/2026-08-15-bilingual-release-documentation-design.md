@@ -48,7 +48,10 @@ The summary must not generalize the measured AMD result to all CPUs.
 Retain `packages/dsh-plugin-chrome-faithful/README.md` as the npm-facing English
 README and add `packages/dsh-plugin-chrome-faithful/README.zh-CN.md`. The two
 files use matching sections for compatibility, installation, configuration,
-security boundary, and verification status.
+security boundary, and verification status. Add the Chinese README to the
+bundle's explicit `files` allowlist so the reciprocal language link resolves
+inside the published npm tarball; this is a documentation inventory update,
+not a runtime packaging change.
 
 Both languages must preserve these exact contracts:
 
@@ -62,9 +65,17 @@ Both languages must preserve these exact contracts:
 - no Python runtime, model weights, secret, download, remote backend, or cloud
   fallback is bundled.
 
-Add a short local OCR evidence paragraph in both files. It may call the default
-PP-OCRv5 route live-accepted, but it must keep the optional VLM path described
-as disabled by default and not quality-approved.
+Add a short local OCR evidence paragraph in both files. It must state all three
+acceptance boundaries together:
+
+- the direct production MCP path through the extension, bridge, MCP server,
+  and `chrome_visual_extract` passed OCR quality acceptance;
+- consumption of `chrome_visual_extract` by a DSH model was not evaluated; and
+- the optional VLM path remained disabled, uninstalled, unevaluated, and not
+  approved.
+
+Do not shorten this to "DSH OCR accepted", "DSH vision accepted", or another
+phrase that upgrades direct MCP evidence into a DSH-model acceptance claim.
 
 ### Acceptance report pair
 
@@ -93,6 +104,31 @@ language selectors.
 
 ## Verification
 
+Add a machine-enforced bilingual release contract to
+`test/release-contract.test.mjs`. It must parse the tracked source documents
+and the DSH bundle dry-run inventory, then lock:
+
+- reciprocal language selectors for the root README, DSH README, and
+  acceptance-report pairs;
+- source tracking for all six documents and npm membership for both DSH
+  READMEs;
+- the explicit English-to-Chinese public heading-order mappings;
+- version `0.4.0`, Node `>=22.12.0`, DSH `0.1.0-rc.6`, and 38 MCP tools;
+- the exact six forwarded environment-variable names;
+- both official model archive SHA-256 values, 7/7 detected blocks, 6/7 exact
+  normalized lines, 99.43% raw and 100% non-whitespace character accuracy,
+  0.9754 mean and 0.9379 minimum confidence, and all three measured latency
+  values;
+- the unrestricted raw CDP trusted-client boundary; and
+- explicit negative statements that DSH model consumption of visual output
+  was not evaluated and the optional VLM was not approved.
+
+The contract must fail if a fixture or temporary copy changes any locked
+Chinese or English metric, hash, version, tool count, environment-variable
+set, language link, heading mapping, or acceptance boundary. A passing test
+against unchanged files alone is insufficient proof that the assertions can
+detect drift.
+
 The implementation is acceptable when:
 
 1. every language selector resolves to a tracked file;
@@ -103,15 +139,20 @@ The implementation is acceptable when:
    results;
 5. no statement upgrades the optional VLM path to verified status;
 6. Markdown links and repository-local paths resolve;
-7. `git diff --check`, project checks, and the full Node 22 test suite pass; and
-8. an independent reviewer finds no material translation drift, unsupported
+7. the bilingual release contract's deliberate-mutation probes fail for each
+   protected fact class and the unchanged documents pass;
+8. `npm pack --dry-run --json` includes both DSH READMEs and every packaged
+   reciprocal language link resolves within the tarball;
+9. `git diff --check`, project checks, and the full Node 22 test suite pass; and
+10. an independent reviewer finds no material translation drift, unsupported
    release claim, or missing public-language link.
 
 ## Non-goals
 
 - Translating every repository document.
-- Changing runtime behavior, packaging, versions, dependencies, or security
-  policy.
+- Changing runtime behavior, versions, dependencies, security policy, or any
+  package inventory except adding the Chinese DSH README to the bundle's
+  explicit documentation allowlist.
 - Publishing packages, tags, GitHub releases, or changing repository
   visibility.
 - Installing or evaluating an optional VLM.
