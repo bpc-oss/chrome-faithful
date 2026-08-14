@@ -43,16 +43,16 @@ bundle 会精确锁定 core 版本，因此必须先发布 Chrome Faithful core�
 文字、置信度和归一化截图坐标。默认适配器要求用户自行安装 PaddleOCR 运行时，
 并显式指定本地 PP-OCRv5 mobile 模型目录。
 
-直接生产 MCP 路径（扩展 → 桥接 → MCP 服务 → `chrome_visual_extract`）的
-实机 OCR 质量验收已通过：检出 7/7 个文本块，原始字符准确率 99.43%，忽略
-空白后准确率 100%。DSH 模型对 `chrome_visual_extract` 输出的消费尚未评测。
-可选 VLM 保持关闭，未安装、未评测且未批准。
-
 ```text
 CHROME_FAITHFUL_PYTHON=C:\Python311\python.exe
 CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR=C:\Models\PP-OCRv5_mobile_det
 CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR=C:\Models\PP-OCRv5_mobile_rec
 ```
+
+直接生产 MCP 路径（扩展 → 桥接 → MCP 服务 → `chrome_visual_extract`）的
+实机 OCR 质量验收已通过：检出 7/7 个文本块，原始字符准确率 99.43%，忽略
+空白后准确率 100%。DSH 模型对 `chrome_visual_extract` 输出的消费尚未评测。
+可选 VLM 保持关闭，未安装、未评测且未批准。
 
 可选的 `CHROME_FAITHFUL_OCR_BACKEND` 和
 `CHROME_FAITHFUL_VLM_BACKEND` 支持无 shell 的 JSON 数组 CLI 规范，例如

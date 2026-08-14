@@ -165,6 +165,12 @@ model weights. Install those optional components yourself and configure both
 absolute local model directories so PaddleOCR cannot fall back to downloading
 weights:
 
+```text
+CHROME_FAITHFUL_PYTHON=C:\Python311\python.exe
+CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR=C:\Models\PP-OCRv5_mobile_det
+CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR=C:\Models\PP-OCRv5_mobile_rec
+```
+
 Live quality acceptance of the direct production MCP path detected 7/7 blocks,
 reached 99.43% raw and 100% non-whitespace character accuracy, and returned
 0.9754 mean / 0.9379 minimum confidence with valid coordinates, reading order,
@@ -172,12 +178,6 @@ and identical output across three 3.00--3.25 second calls on the accepted AMD
 Ryzen 9 9950X3D host. DSH model consumption of `chrome_visual_extract` output
 was not evaluated, and the optional VLM was not approved. See the
 [acceptance report](docs/visual-model-acceptance-2026-08-14.md).
-
-```text
-CHROME_FAITHFUL_PYTHON=C:\Python311\python.exe
-CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR=C:\Models\PP-OCRv5_mobile_det
-CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR=C:\Models\PP-OCRv5_mobile_rec
-```
 
 `CHROME_FAITHFUL_OCR_BACKEND` may instead be a shell-free
 `cli:["executable","arg"]` specification or an exact

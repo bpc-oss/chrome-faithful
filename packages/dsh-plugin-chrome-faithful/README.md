@@ -48,18 +48,18 @@ confidence, and normalized screenshot coordinates as text JSON. The default
 adapter requires a user-installed PaddleOCR runtime and explicit local
 PP-OCRv5 mobile model directories:
 
+```text
+CHROME_FAITHFUL_PYTHON=C:\Python311\python.exe
+CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR=C:\Models\PP-OCRv5_mobile_det
+CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR=C:\Models\PP-OCRv5_mobile_rec
+```
+
 Live quality acceptance passed on the direct production MCP path from the
 extension through the bridge and MCP server to `chrome_visual_extract`: 7/7
 blocks were detected with 99.43% raw and 100% non-whitespace character
 accuracy. DSH model consumption of `chrome_visual_extract` output was not
 evaluated. The optional VLM remained disabled, uninstalled, unevaluated, and
 not approved.
-
-```text
-CHROME_FAITHFUL_PYTHON=C:\Python311\python.exe
-CHROME_FAITHFUL_PPOCR_DET_MODEL_DIR=C:\Models\PP-OCRv5_mobile_det
-CHROME_FAITHFUL_PPOCR_REC_MODEL_DIR=C:\Models\PP-OCRv5_mobile_rec
-```
 
 The optional `CHROME_FAITHFUL_OCR_BACKEND` and
 `CHROME_FAITHFUL_VLM_BACKEND` variables accept a shell-free JSON-array CLI

@@ -107,9 +107,28 @@ function markdownHeadings(text) {
     .map((match) => `${match[1].length}:${match[2]}`);
 }
 
-function uniqueEnvironmentVariables(text) {
-  return [...new Set(text.match(/\b(?:AGENTOS_CHROME_CONFIG|CHROME_FAITHFUL_(?:OCR_BACKEND|PYTHON|PPOCR_DET_MODEL_DIR|PPOCR_REC_MODEL_DIR|VLM_BACKEND))\b/g) ?? [])]
+function forwardedEnvironmentVariables(text) {
+  const paragraph = text.match(
+    /(?:The bundle forwards only these six defined string values:|bundle 只转发以下六个已定义的字符串值：)([\s\S]*?)\n\n/
+  );
+  assert.ok(paragraph, "forwarded environment paragraph");
+  return [...new Set(paragraph[1].match(/\b(?:AGENTOS|CHROME_FAITHFUL)_[A-Z0-9_]+\b/g) ?? [])]
     .sort();
+}
+
+function semanticVersions(text) {
+  return [...new Set(text.match(/\b\d+\.\d+\.\d+(?:-rc\.\d+)?\b/g) ?? [])].sort();
+}
+
+function documentedToolCounts(text) {
+  return [...new Set([...text.matchAll(/\b(\d+)(?=(?:st|nd|rd|th)?(?:-|\s)+(?:tools?|个工具))/gi)]
+    .map((match) => Number(match[1])))].sort((left, right) => left - right);
+}
+
+function productionEvidence(text) {
+  const section = text.match(/## (?:Production-path evidence|生产路径证据)\n([\s\S]*?)\n## /);
+  assert.ok(section, "production evidence section");
+  return section[1];
 }
 
 function assertBilingualReleaseContract(documents, bundleFiles) {
@@ -132,13 +151,21 @@ function assertBilingualReleaseContract(documents, bundleFiles) {
   }
 
   for (const key of ["dshEnglish", "dshChinese"]) {
-    assert.deepEqual(uniqueEnvironmentVariables(documents[key]), [...forwardedVisualEnv].sort());
+    assert.deepEqual(forwardedEnvironmentVariables(documents[key]), [...forwardedVisualEnv].sort());
+    assert.deepEqual(semanticVersions(documents[key]), ["0.1.0-rc.6", "0.4.0", "22.12.0"]);
+    assert.deepEqual(documentedToolCounts(documents[key]), [37, 38]);
     assert.match(documents[key], /chrome_cdp/);
     assert.match(documents[key], /unrestricted raw CDP|不受限的 raw CDP/);
     assert.match(documents[key], /DSH model consumption[^.]*was not\s+evaluated|DSH 模型[^。]*未评测/i);
     assert.match(documents[key], /VLM[^.。]*(?:not approved|未批准)/i);
     assert.doesNotMatch(documents[key], /DSH (?:OCR|vision) accepted/i);
     assert.doesNotMatch(documents[key], /DSH (?:OCR|视觉).{0,8}(?:已验收|通过验收)/);
+    assert.doesNotMatch(documents[key], /DSH model (?:visual|vision|OCR)[^.\n]*(?:acceptance passed|accepted|approved|was evaluated)/i);
+    assert.doesNotMatch(documents[key], /DSH 模型[^。\n]*(?:视觉|OCR)[^。\n]*(?:已验收|通过验收|已评测|已批准)/);
+    assert.doesNotMatch(documents[key], /(?:VLM quality was approved|VLM (?:was|is) approved|VLM acceptance passed)/i);
+    assert.doesNotMatch(documents[key], /VLM[^。\n]*(?:已批准|通过验收|已验收)/);
+    assert.doesNotMatch(documents[key], /raw CDP[^.\n]*(?:safe projection|safe-projected|sanitized)/i);
+    assert.doesNotMatch(documents[key], /raw CDP[^。\n]*(?:安全投影|已脱敏|安全边界内)/);
   }
 
   for (const key of ["rootEnglish", "rootChinese"]) {
@@ -153,6 +180,38 @@ function assertBilingualReleaseContract(documents, bundleFiles) {
     }
     assert.match(documents[key], /enable_mkldnn=False/);
     assert.match(documents[key], /VLM[^.。]*(?:not approved|未批准)/i);
+  }
+
+  const exactEvidenceLines = {
+    acceptanceEnglish: [
+      "- detected blocks: 7/7",
+      "- exact lines after Unicode normalization: 6/7",
+      "- raw character accuracy: 99.43%",
+      "- non-whitespace character accuracy: 100%",
+      "- mean confidence: 0.9754",
+      "- minimum confidence: 0.9379",
+      "- end-to-end call latency: 3233 ms, 2996 ms, 3245 ms"
+    ],
+    acceptanceChinese: [
+      "- 检出文本块：7/7",
+      "- Unicode 归一化后完全一致的文本行：6/7",
+      "- 原始字符准确率：99.43%",
+      "- 忽略空白后的字符准确率：100%",
+      "- 平均置信度：0.9754",
+      "- 最低置信度：0.9379",
+      "- 端到端调用耗时：3233 ms、2996 ms、3245 ms"
+    ]
+  };
+  for (const [key, expectedLines] of Object.entries(exactEvidenceLines)) {
+    const evidence = productionEvidence(documents[key]);
+    for (const line of expectedLines) {
+      assert.equal(evidence.split("\n").filter((candidate) => candidate === line).length, 1, `${key}: ${line}`);
+    }
+    assert.equal(
+      evidence.split("\n").filter((line) => /(?:raw character accuracy|原始字符准确率)/i.test(line)).length,
+      1,
+      `${key}: unique raw accuracy`
+    );
   }
 
   assert.deepEqual(bundleFiles, [
@@ -409,6 +468,13 @@ test("bilingual release documents preserve reciprocal links and locked facts", a
       ...value,
       dshEnglish: value.dshEnglish.replaceAll("CHROME_FAITHFUL_VLM_BACKEND", "CHROME_FAITHFUL_EXTRA_BACKEND")
     })],
+    ["appended environment variable", (value) => ({
+      ...value,
+      dshEnglish: value.dshEnglish.replace(
+        "`CHROME_FAITHFUL_VLM_BACKEND`.\n\nOn activation",
+        "`CHROME_FAITHFUL_VLM_BACKEND`, and `CHROME_FAITHFUL_EXTRA_BACKEND`.\n\nOn activation"
+      )
+    })],
     ["model hash", (value) => ({
       ...value,
       acceptanceChinese: value.acceptanceChinese.replaceAll(modelHashes[0], "0".repeat(64))
@@ -416,6 +482,13 @@ test("bilingual release documents preserve reciprocal links and locked facts", a
     ["OCR metric", (value) => ({
       ...value,
       acceptanceChinese: value.acceptanceChinese.replaceAll("99.43%", "99.42%")
+    })],
+    ["appended contradictory OCR metric", (value) => ({
+      ...value,
+      acceptanceEnglish: value.acceptanceEnglish.replace(
+        "- raw character accuracy: 99.43%",
+        "- raw character accuracy: 99.43%\n- raw character accuracy: 98%"
+      )
     })],
     ["raw CDP boundary", (value) => ({
       ...value,
@@ -428,6 +501,26 @@ test("bilingual release documents preserve reciprocal links and locked facts", a
     ["VLM boundary", (value) => ({
       ...value,
       dshChinese: value.dshChinese.replaceAll("未批准", "已批准")
+    })],
+    ["appended DSH acceptance contradiction", (value) => ({
+      ...value,
+      dshEnglish: `${value.dshEnglish}\nDSH model visual acceptance passed.\n`
+    })],
+    ["appended VLM contradiction", (value) => ({
+      ...value,
+      dshEnglish: `${value.dshEnglish}\nVLM quality was approved.\n`
+    })],
+    ["appended version contradiction", (value) => ({
+      ...value,
+      dshEnglish: `${value.dshEnglish}\nCurrent bundle version: 0.4.1.\n`
+    })],
+    ["appended tool-count contradiction", (value) => ({
+      ...value,
+      dshEnglish: `${value.dshEnglish}\nThe bundle exposes 39 tools.\n`
+    })],
+    ["appended raw-CDP contradiction", (value) => ({
+      ...value,
+      dshEnglish: `${value.dshEnglish}\nraw CDP is a safe projection.\n`
     })]
   ];
 
