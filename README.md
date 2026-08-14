@@ -127,6 +127,30 @@ permissions back their corresponding tools. Host access is limited to
 `http://127.0.0.1/*` for the local bridge. For deterministic, disposable CI
 browsers, use Playwright or Puppeteer instead.
 
+## DSH first-class integration
+
+Chrome Faithful ships a first-party DeepSeek Harness bundle in
+`packages/dsh-plugin-chrome-faithful/`. It uses DSH's host-provided MCP client
+instead of duplicating the browser tools, so DSH gets the same exact-profile
+routing and security behavior as every other client.
+
+Supported baseline: `@deepseek-ai/dsh` `0.1.0-rc.6` and Node.js `>=22.12.0`.
+DSH remains an RC, so every newer RC requires a composition recheck.
+
+After the core and bundle packages are published, install into the intended
+profile:
+
+```sh
+dsh plugin --profile web add @bpc-oss/dsh-plugin-chrome-faithful@0.4.0
+```
+
+The model sees stable names such as
+`mcp__chrome_faithful__chrome_profiles`. The bundle embeds no secret and passes
+`AGENTOS_CHROME_CONFIG` only when explicitly set. Initial configuration or
+resolution failures stop activation instead of leaving a silent zero-tool
+plugin. See the [DSH bundle README](packages/dsh-plugin-chrome-faithful/README.md)
+for packaging, trust-boundary, and private-acceptance details.
+
 ## Quick start (Windows)
 
 Prerequisites: Node.js >= 22.12, Chrome, PowerShell (only the installers and the
@@ -322,6 +346,7 @@ driven by `scripts/live-acceptance.mjs`,
 - [SECURITY.md](SECURITY.md) — safety model and vulnerability reporting
 - [CONTRIBUTING.md](CONTRIBUTING.md) — development workflow
 - [docs/CODEX_PARITY.md](docs/CODEX_PARITY.md) — Codex parity design
+- [packages/dsh-plugin-chrome-faithful/](packages/dsh-plugin-chrome-faithful/) — first-party DSH bundle
 - [docs/superpowers/specs/](docs/superpowers/specs/) — design specs
   (profile launch, resilient bridge ownership, verification handling)
 - [skills/control-chrome-cdp/SKILL.md](skills/control-chrome-cdp/SKILL.md) —

@@ -23,7 +23,9 @@ Node.js 22.12 or newer is required.
 ```bash
 npm ci --ignore-scripts   # puppeteer-core is used as a library; no browser download
 npm run check             # static gates (file presence, JSON validity, generic boundary)
+npm run check:dsh         # evaluate and validate the DSH bundle contract
 npm test                  # mock/unit tests (node --test)
+npm run test:dsh-package  # paired-tarball DSH package isolation
 npm run build:extension   # regenerate extension/generated/puppeteer-runtime.js
 npm run check:parity      # repository-authored browser compatibility contract
 ```

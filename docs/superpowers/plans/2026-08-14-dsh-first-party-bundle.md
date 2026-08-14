@@ -287,7 +287,7 @@ Run:
 npm run check
 node --test test/release-contract.test.mjs test/dsh-bundle-contract.test.mjs test/dsh-package-isolation.test.mjs
 npm pack --dry-run --json
-npm pack --dry-run --json packages/dsh-plugin-chrome-faithful
+npm pack --dry-run --json ./packages/dsh-plugin-chrome-faithful
 git diff --check
 ```
 

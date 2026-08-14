@@ -79,6 +79,26 @@ Chrome Faithful 聚焦于 fail-closed 本地桥接下的精确、多 Profile 控
 `http://127.0.0.1/*` 本地桥接。若需要确定、一次性的 CI 浏览器，应使用
 Playwright 或 Puppeteer。
 
+## DSH 一等集成
+
+Chrome Faithful 在 `packages/dsh-plugin-chrome-faithful/` 提供第一方
+DeepSeek Harness bundle。它复用 DSH 宿主提供的 MCP Client，不复制浏览器
+工具，因此 DSH 与其他客户端共享完全相同的精确 Profile 路由与安全行为。
+
+已验证基线为 `@deepseek-ai/dsh` `0.1.0-rc.6`，Node.js 要求
+`>=22.12.0`。DSH 仍处于 RC 阶段，每次升级 RC 都需要重新验证组合契约。
+
+核心包和 bundle 发布后，可安装到目标 Profile：
+
+```sh
+dsh plugin --profile web add @bpc-oss/dsh-plugin-chrome-faithful@0.4.0
+```
+
+模型看到的是 `mcp__chrome_faithful__chrome_profiles` 等稳定名称。bundle
+不嵌入密钥，仅在显式设置时传递 `AGENTOS_CHROME_CONFIG`；初始配置或解析
+失败会中止激活，不会静默留下零工具插件。打包、信任边界和私有验收规则见
+[DSH bundle README](packages/dsh-plugin-chrome-faithful/README.md)。
+
 ## 快速上手（Windows）
 
 前置：Node.js >= 22.12、Chrome、PowerShell（只有安装器和 `.cmd` 启动器是 Windows 专属；扩展、桥接、MCP 服务均为平台无关）。
@@ -198,6 +218,7 @@ npm run build:extension
 - [SECURITY.md](SECURITY.md) — 安全模型与漏洞上报
 - [CONTRIBUTING.md](CONTRIBUTING.md) — 开发流程
 - [docs/CODEX_PARITY.md](docs/CODEX_PARITY.md) — Codex parity 设计
+- [packages/dsh-plugin-chrome-faithful/](packages/dsh-plugin-chrome-faithful/) — 第一方 DSH bundle
 - [docs/superpowers/specs/](docs/superpowers/specs/) — 设计文档（Profile 启动、弹性桥接归属、验证处理）
 - [skills/control-chrome-cdp/SKILL.md](skills/control-chrome-cdp/SKILL.md) — 面向智能体的操作技能
 - [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) — 打包的第三方代码

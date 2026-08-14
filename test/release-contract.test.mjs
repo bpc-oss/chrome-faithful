@@ -1,8 +1,15 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { promisify } from "node:util";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 const root = new URL("../", import.meta.url);
+const rootPath = fileURLToPath(root);
+const execFileAsync = promisify(execFile);
+const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 
 async function readJson(path) {
   return JSON.parse(await readFile(new URL(path, root), "utf8"));
@@ -130,10 +137,40 @@ test("DSH bundle has a stable public launcher and exact core version", async () 
   assert.equal(bundle.dependencies?.["@deepseek-ai/dsh-mcp-client"], undefined);
   assert.equal(bundle.engines.node, rootPackage.engines.node);
   assert.equal(bundle.dsh.bundle.patch, "./cordis.patch.yml");
-  assert.deepEqual(bundle.files, ["bin/", "cordis.patch.yml", "README.md"]);
+  assert.deepEqual(bundle.files, ["bin/", "cordis.patch.yml", "README.md", "LICENSE"]);
   assert.equal(bundle.exports["./mcp-server"], "./bin/chrome-faithful-mcp.mjs");
   assert.equal(bundle.bin["chrome-faithful-mcp"], "./bin/chrome-faithful-mcp.mjs");
 
   assert.match(launcher, /^#!\/usr\/bin\/env node\nimport "chrome-faithful\/mcp-server";\n$/);
   assert.doesNotMatch(launcher, /\b(?:spawn|exec|shell|catch|fallback)\b/i);
+});
+
+async function dryRunPack(cwd) {
+  const { stdout } = await execFileAsync(
+    npmCommand,
+    ["pack", "--dry-run", "--json"],
+    { cwd, maxBuffer: 10 * 1024 * 1024, windowsHide: true }
+  );
+  const result = JSON.parse(stdout);
+  assert.equal(result.length, 1);
+  return result[0].files.map((entry) => entry.path).sort();
+}
+
+test("core and DSH bundle publish independent allowlisted artifacts", async () => {
+  const [coreFiles, bundleFiles] = await Promise.all([
+    dryRunPack(rootPath),
+    dryRunPack(path.join(rootPath, "packages", "dsh-plugin-chrome-faithful"))
+  ]);
+  const forbidden = /^(?:test|reports|tmp|docs\/superpowers|config\/local(?:\.json)?)(?:\/|$)/;
+
+  assert.equal(coreFiles.some((entry) => forbidden.test(entry)), false);
+  assert.equal(coreFiles.some((entry) => entry.startsWith("packages/dsh-plugin-chrome-faithful/")), false);
+  assert.equal(bundleFiles.some((entry) => forbidden.test(entry)), false);
+  assert.deepEqual(bundleFiles, [
+    "LICENSE",
+    "README.md",
+    "bin/chrome-faithful-mcp.mjs",
+    "cordis.patch.yml",
+    "package.json"
+  ]);
 });
