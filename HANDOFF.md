@@ -5,8 +5,8 @@
 - Provider-neutral Chrome Faithful core, first-party DSH bundle, and local-first
   visual extraction are implemented on `codex/dsh-bundle-implementation`.
 - The private remote feature branch and `main` contain the reviewed visual
-  implementation and live OCR fix through `37309b0`; GitHub Actions run
-  `31817305227` passed.
+  implementation, live OCR fix, and bilingual release presentation through
+  `8f5579b`; GitHub Actions run `31820835312` passed.
 - Nothing has been published to npm and repository visibility was not changed.
 - DSH support targets `@deepseek-ai/dsh 0.1.0-rc.6`; revalidate composition for
   every DSH RC.
@@ -128,6 +128,32 @@
 - The default WSL Node is `v20.20.2`, below the declared `>=22.12.0` engine;
   its DSH host test fails at `Promise.withResolvers`. This is an environment
   rejection, not counted as a pass. All acceptance evidence uses Node 22.12.0.
+
+## Bilingual release presentation
+
+- Root, DSH bundle, and PP-OCRv5 acceptance documentation now have reciprocal
+  English/Simplified Chinese presentation. Both root READMEs summarize the
+  measured 7/7, 99.43%/100%, 0.9754/0.9379, and three-run latency evidence.
+- The DSH README pair explicitly distinguishes direct production MCP OCR
+  acceptance from untested DSH-model consumption. The optional VLM remains
+  disabled by default, uninstalled, unevaluated, and not approved.
+- The DSH npm allowlist now includes `README.md` and `README.zh-CN.md`. A dry-run
+  pack produced exactly six files and both relative language links resolve
+  inside that inventory.
+- `test/release-contract.test.mjs` locks reciprocal selectors, heading order,
+  versions, Node/DSH floors, 38 tools, the exact six-variable forwarding set,
+  model hashes, unique evidence metrics, raw-CDP trust boundaries, and negative
+  DSH/VLM claims. Deliberate replacement and additive contradiction mutations
+  prevent false-green documentation drift.
+- Node 22.12.0 full tests passed 257/257 with 0 failures/skips; `CHECK_OK` and
+  parity 22 interfaces/135 members passed. Independent implementation review
+  returned `APPROVED` after three finding-and-repair cycles closed package,
+  semantic-boundary, readability, and additive-contradiction gaps.
+- GitHub Actions run
+  `https://github.com/bpc-oss/chrome-faithful/actions/runs/31820835312` at
+  `8f5579b` passed Ubuntu and Windows, including MCPB and Windows installer
+  transaction tests. The repository remained private and no npm package, tag,
+  or GitHub release was published.
 
 ## Remaining gates
 
