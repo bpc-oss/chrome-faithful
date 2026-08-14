@@ -103,7 +103,7 @@ function Get-ExtensionDefinition {
   ).Count -gt 0
   if (
     $definition.manifest_version -ne 3 -or
-    $definition.name -ne 'Agent OS Chrome CDP' -or
+    $definition.name -ne 'Chrome Faithful' -or
     $definition.background.service_worker -ne 'service-worker.js' -or
     $definition.background.type -ne 'module' -or
     $definition.options_ui.page -ne 'options.html' -or
