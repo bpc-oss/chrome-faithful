@@ -35,14 +35,20 @@ The package contains:
 - `package.json`: DSH bundle manifest, exact package contents, public metadata,
   and dependencies.
 - `cordis.patch.yml`: mounts one instance of DSH's official MCP client.
-- `bin/chrome-faithful-mcp.mjs`: a stable stdio launcher that resolves and
+- `bin/chrome-faithful-mcp.mjs`: a stable stdio launcher, exported as
+  `./mcp-server`, that resolves and
   imports the installed `chrome-faithful` MCP entry point.
 - `README.md`: DSH-specific installation, configuration, security, and
   troubleshooting guidance.
 
-The package depends on the matching `chrome-faithful` release and declares the
-official `@deepseek-ai/dsh-mcp-client` RC line as a peer dependency. DSH owns
-the MCP client instance; the bundle supplies its configuration.
+The package depends on the exact matching `chrome-faithful` release, initially
+`0.4.0`. It declares no dependency or peer dependency on
+`@deepseek-ai/dsh-mcp-client`: that plugin is a DSH host capability, and DSH
+profiles are installed with peer auto-install disabled. The supported host
+floor is `@deepseek-ai/dsh` `0.1.0-rc.6`, whose published package includes
+`@deepseek-ai/dsh-mcp-client` `^0.1.0-rc.6`. Each DSH RC upgrade requires this
+composition contract to be revalidated before the documented host range is
+changed.
 
 ## Bundle composition
 
@@ -51,10 +57,15 @@ the MCP client instance; the bundle supplies its configuration.
 - plugin: `@deepseek-ai/dsh-mcp-client`
 - `serverName`: `chrome_faithful`
 - transport: `stdio`
-- command: `chrome-faithful-mcp`
+- command: `!!js process.execPath`
+- args: one absolute launcher path resolved from the profile `baseUrl` with
+  `process.getBuiltinModule('node:module').createRequire(baseUrl).resolve(
+  '@bpc-oss/dsh-plugin-chrome-faithful/mcp-server')`
 - tool-call timeout: `60000` milliseconds
-- explicit environment pass-through:
-  `AGENTOS_CHROME_CONFIG: !!js process.env.AGENTOS_CHROME_CONFIG`
+- `failOnStartupError: true`
+- environment: one expression that returns `{}` when
+  `AGENTOS_CHROME_CONFIG` is absent and otherwise returns
+  `{ AGENTOS_CHROME_CONFIG: process.env.AGENTOS_CHROME_CONFIG }`
 
 DSH therefore exposes tools as
 `mcp__chrome_faithful__chrome_<operation>`. The namespace is fixed so session
@@ -70,22 +81,27 @@ Chrome profile, or weaken exact-profile selection.
 The launcher is a minimal ESM executable. It imports the exported Chrome
 Faithful MCP entry point and lets that process own stdio for its complete
 lifetime. It must not spawn through a shell, discover arbitrary executables,
-rewrite environment variables, or catch and hide startup errors.
+rewrite environment variables, or catch and hide startup errors. A human-facing
+`chrome-faithful-mcp` bin alias may be included, but bundle composition must not
+depend on `node_modules/.bin` being present on `PATH`.
 
 The root `chrome-faithful` package will export a stable
 `./mcp-server` subpath. The launcher imports only that public subpath; it does
 not depend on the root package's filesystem layout.
 
-If the core package cannot be resolved, Node exits non-zero with the native
-module-resolution error. If configuration is missing or invalid, the existing
-MCP server fails closed with its current actionable error. DSH's MCP client
+If the bundle launcher or core package cannot be resolved, DSH profile startup
+fails loudly. If configuration is missing or invalid, the existing MCP server
+fails closed with its current actionable error. `failOnStartupError: true`
+prevents DSH from silently activating the bundle with no tools during the
+initial connection. After a successful initial connection, DSH's MCP client
 owns reconnect and duplicate-namespace handling.
 
 ## Versioning and publication
 
-The DSH bundle version must equal the root Chrome Faithful version. A root
-release-contract test enforces this equality and verifies that the bundle's
-dependency range accepts that exact version.
+The DSH bundle version must equal the root Chrome Faithful version. Its
+`chrome-faithful` dependency is that exact version, without a caret or tilde.
+A root release-contract test enforces both equalities so a paired bundle cannot
+silently load a newer core.
 
 The root npm package remains `chrome-faithful`; the DSH package is separately
 packable from its subdirectory. Both packages use explicit `files` allowlists.
@@ -95,6 +111,9 @@ generated scratch data, or internal implementation plans.
 The repository stays private and no package is published as part of this
 implementation. Making the repository public, pushing a branch, publishing to
 npm, or installing into a live DSH profile remains a separate external action.
+For a later release, publish the core first and the bundle second. During
+private development, acceptance installs both locally packed tarballs together
+and performs no registry lookup for the unpublished core version.
 
 ## Documentation and positioning
 
@@ -118,22 +137,36 @@ installed. They must prove:
 1. The bundle package has the required `dsh.bundle.patch` declaration and an
    explicit publication allowlist.
 2. The bundle row mounts the official MCP client with the fixed namespace,
-   stdio transport, CLI command, timeout, and explicit configuration pass-through.
+   stdio transport, `process.execPath`, absolute resolved launcher argument,
+   timeout, `failOnStartupError: true`, and conditional configuration pass-through.
 3. The launcher imports the public `chrome-faithful/mcp-server` subpath and
    contains no shell-spawn or fallback logic.
 4. The root package exports `./mcp-server` to the existing server file.
-5. Root and bundle versions match, and the bundle dependency accepts that exact
+5. Root and bundle versions match, and the bundle dependency equals that exact
    core version.
 6. `npm pack --dry-run` for both package roots excludes tests, reports, scratch,
    private configuration, and `docs/superpowers`.
 7. Existing static, parity, unit, deterministic-extension, package, and Windows
    installer gates remain green.
+8. A two-tarball isolation test packs the core and bundle, installs them into a
+   temporary profile-like package root with its `.bin` directory excluded from
+   `PATH`, resolves the bundle's `./mcp-server` export through
+   `createRequire(baseUrl)`, and starts it with an intentionally missing config.
+   The expected actionable config error proves that launcher resolution reached
+   the installed core. The path assertion runs on POSIX and uses Windows-safe
+   path construction; the Windows CI job executes the same test.
+9. The conditional `env` expression is evaluated through DSH's expression/YAML
+   path, or the same published schema parser, with the environment variable both
+   absent and present. String or regex inspection alone is insufficient.
+10. An isolated startup-failure fixture proves `failOnStartupError: true`
+    rejects activation instead of leaving an active bundle with zero tools.
 
 Live DSH installation is not required for the source change because it would
 modify an external user-owned profile. Before a public release, a separately
 authorized acceptance run should install the packed bundle into a disposable
-DSH profile, list namespaced tools, call `chrome_profiles`, and remove the
-profile or package afterward.
+DSH profile, run `--dump-default-config`, verify the fail-on-startup path, list
+namespaced tools, call `chrome_profiles`, and remove the profile or package
+afterward.
 
 ## Acceptance criteria
 
