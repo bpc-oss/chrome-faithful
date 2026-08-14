@@ -72,7 +72,7 @@ function safeProfileDirectory(value) {
     && !value.includes("\0");
 }
 
-const AGENT_OS_EXTENSION_NAME = "Agent OS Chrome CDP";
+const AGENT_OS_EXTENSION_NAME = "Chrome Faithful";
 const CHROME_EXTENSION_ID = /^[a-p]{32}$/;
 
 function validAgentOsExtensionManifest(manifest) {

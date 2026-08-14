@@ -32,7 +32,7 @@ const extensionId = "abcdefghijklmnopabcdefghijklmnop";
 const buildId = "test-build";
 const extensionManifest = JSON.stringify({
   manifest_version: 3,
-  name: "Agent OS Chrome CDP",
+  name: "Chrome Faithful",
   version: "0.3.0",
   version_name: buildId,
   permissions: ["debugger", "storage", "offscreen"],

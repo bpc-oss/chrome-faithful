@@ -142,7 +142,7 @@ if (bootstrapToken) {
       "agentosBootstrapTransportStage"
     ]);
     bootstrapSucceeded = true;
-    document.title = "Agent OS Chrome CDP - connected";
+    document.title = "Chrome Faithful - connected";
     status.textContent = `已安全连接：${next.profileName}（这是插件的常驻宿主页，请保持打开）`;
   } catch (error) {
     await chrome.storage.session?.remove([
@@ -152,7 +152,7 @@ if (bootstrapToken) {
       "bootstrapRegisteredAt",
       "agentosBootstrapTransportStage"
     ]).catch(() => {});
-    document.title = `Agent OS Chrome CDP - bootstrap-error:${bootstrapStage}`;
+    document.title = `Chrome Faithful - bootstrap-error:${bootstrapStage}`;
     status.textContent = `连接失败：${error.message}`;
   }
 }
@@ -162,8 +162,8 @@ if (!bootstrapToken && !bootstrapSucceeded && values.profileName && values.bridg
   const diagnostic = await chrome.runtime.sendMessage({ type: "agentos-config-changed" })
     .catch((error) => ({ ok: false, error: error.message }));
   document.title = diagnostic?.ok
-    ? "Agent OS Chrome CDP - connected"
-    : "Agent OS Chrome CDP - error";
+    ? "Chrome Faithful - connected"
+    : "Chrome Faithful - error";
 }
 document.getElementById("save").addEventListener("click", async () => {
   const next = Object.fromEntries(fields.map((key) => [key, document.getElementById(key).value.trim()]));

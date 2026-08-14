@@ -3,6 +3,6 @@
   "version": "0.4.0",
   "description": "Control exact logged-in Chrome profiles with a Codex-compatible browser API.",
   "author": {
-    "name": "Agent OS"
+    "name": "bpc-oss"
   }
 }

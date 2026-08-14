@@ -1276,7 +1276,7 @@ export class ChromeBrowser {
     this.sessionState.name = name.trim();
   }
   async documentation() {
-    return "Agent OS Chrome CDP mirrors the Codex Chrome 26.721.41059 browser API over an exact-profile Chrome extension and chrome.debugger. Select metadata.profileName explicitly whenever multiple profiles are connected.";
+    return "Chrome Faithful provides an agent.browsers-style API over an exact-profile Chrome extension and chrome.debugger. Select metadata.profileName explicitly whenever multiple profiles are connected.";
   }
 }
 

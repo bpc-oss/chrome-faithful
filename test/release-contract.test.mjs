@@ -33,9 +33,23 @@ test("all plugin manifests use the package release version", async () => {
   ]);
 
   assert.equal(extension.version, packageJson.version);
+  assert.equal(extension.version_name, packageJson.version);
   assert.equal(codex.version, packageJson.version);
   assert.equal(claude.version, packageJson.version);
   assert.equal(mcpb.version, packageJson.version);
+});
+
+test("public display metadata uses the Chrome Faithful brand", async () => {
+  const [extension, codex, mcpb] = await Promise.all([
+    readJson("extension/manifest.json"),
+    readJson(".codex-plugin/plugin.json"),
+    readJson("mcpb/manifest.json")
+  ]);
+
+  assert.equal(extension.name, "Chrome Faithful");
+  assert.equal(extension.action.default_title, "Chrome Faithful");
+  assert.equal(codex.interface.displayName, "Chrome Faithful");
+  assert.equal(mcpb.display_name, "Chrome Faithful");
 });
 
 test("MCPB declares every server tool exactly once", async () => {
@@ -61,4 +75,39 @@ test("compatibility contract contains no copied declaration text", async () => {
   assert.ok(contract);
   assert.doesNotMatch(JSON.stringify(contract), /"declarations"\s*:/);
   assert.doesNotMatch(JSON.stringify(contract), /documentation:/);
+});
+
+test("npm package uses an explicit runtime allowlist", async () => {
+  const packageJson = await readJson("package.json");
+
+  assert.ok(Array.isArray(packageJson.files));
+  assert.ok(packageJson.files.includes("src/"));
+  assert.ok(packageJson.files.includes("extension/"));
+  assert.ok(packageJson.files.includes("compat/"));
+  assert.ok(packageJson.files.includes("mcpb/"));
+  assert.equal(packageJson.files.some((entry) => /^(test|reports|docs\/superpowers)\/?/.test(entry)), false);
+});
+
+test("MCPB build installs the lockfile-defined production dependency tree", async () => {
+  const source = await readFile(new URL("scripts/build-mcpb.mjs", root), "utf8");
+
+  assert.match(source, /npm(?:\.cmd)?["']?/);
+  assert.match(source, /\bci\b/);
+  assert.match(source, /--omit=dev/);
+  assert.doesNotMatch(source, /["']node_modules["']/);
+});
+
+test("CI grants read-only contents access and pins actions by commit", async () => {
+  const workflow = await readFile(new URL(".github/workflows/ci.yml", root), "utf8");
+  const actionRefs = [...workflow.matchAll(/uses:\s*[^@\s]+@([^\s#]+)/g)].map((match) => match[1]);
+
+  assert.match(workflow, /^permissions:\s*\n\s+contents:\s*read\s*$/m);
+  assert.ok(actionRefs.length > 0);
+  assert.equal(actionRefs.every((ref) => /^[0-9a-f]{40}$/.test(ref)), true);
+});
+
+test("extension limits host access to its localhost bridge", async () => {
+  const manifest = await readJson("extension/manifest.json");
+
+  assert.deepEqual(manifest.host_permissions, ["http://127.0.0.1/*"]);
 });

@@ -17,15 +17,16 @@ no Edge, no global mouse/keyboard automation.
 
 ## Why this exists
 
-Most browser MCP servers take one of two shortcuts, and both lose your browser:
+Browser-control tools optimize for different jobs:
 
 | Approach | What you get | What you lose |
 |---|---|---|
-| [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) (Google) | DevTools-oriented attach over CDP | Chrome 136+ blocks remote debugging on the **default profile**; extension support requires a separate `--user-data-dir`, so your real logins are gone |
-| Playwright / Puppeteer MCP servers | A fresh headless browser | Your logins, cookies, extensions, history, and two-factor sessions — everything that makes a browser *yours* |
-| Extension-based MCPs ([BrowserMCP](https://github.com/browsermcp/mcp), [real-browser-mcp](https://github.com/ofershap/real-browser-mcp)) | Control of the real browser | Closest approach, but typically single-session, requires Chrome to already be running, and ships a thinner security model |
+| [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) (Google) | Excellent DevTools, performance, and CDP workflows; Chrome 144+ can `autoConnect` to a running local browser with user approval | Chrome must already be running, and when several profiles are active Chrome chooses the default profile rather than accepting an exact profile name |
+| Playwright / Puppeteer MCP servers | Deterministic, isolated browsers that are ideal for CI and repeatable tests | Existing logins, extensions, history, and two-factor sessions are not present unless separately provisioned |
+| Extension-based MCPs ([BrowserMCP](https://github.com/browsermcp/mcp), [real-browser-mcp](https://github.com/ofershap/real-browser-mcp)) | Control of an existing logged-in browser | A strong fit for live sessions; multi-profile setups may require separate server instances and ports, and normally expect Chrome to be running |
 
-Chrome Faithful is the version with no trade-offs:
+Chrome Faithful focuses on exact-profile, multi-profile control with a
+fail-closed local bridge:
 
 - **Exact multi-profile routing.** Every profile registers with its exact
   `profileName`; duplicate registrations are rejected, so concurrent agents
@@ -119,6 +120,12 @@ equivalent to granting the MCP client DevTools access to the selected logged-in
 profile. Do not enable this server for untrusted clients or shared MCP hosts.
 
 See [SECURITY.md](SECURITY.md) for the full model and reporting policy.
+
+The extension's broad capabilities are intentional and visible: `debugger`
+provides DevTools-equivalent control; `history`, `downloads`, and clipboard
+permissions back their corresponding tools. Host access is limited to
+`http://127.0.0.1/*` for the local bridge. For deterministic, disposable CI
+browsers, use Playwright or Puppeteer instead.
 
 ## Quick start (Windows)
 
@@ -236,7 +243,11 @@ adapter for the Python faster-whisper / OCR / opencv stack; it prefers the
 Agent OS captcha connector when importable and falls back to standalone
 faster-whisper / ddddocr / tesseract / opencv otherwise) or an HTTP endpoint.
 Without a backend, detection, hold/resume, handoff, overlay dismissal, and
-humanized interaction all still work.
+humanized interaction all still work. Enabling a backend sends the configured
+process or endpoint a local capture path and/or a challenge audio URL plus the
+requested action; an HTTP endpoint may therefore transfer challenge data or
+credentials outside this project. Configure only an endpoint you trust and
+are authorized to use.
 
 Design: [docs/superpowers/specs/2026-08-14-verification-handling-design.md](docs/superpowers/specs/2026-08-14-verification-handling-design.md)
 
@@ -281,6 +292,10 @@ redistribute bundled product documentation. `npm run check:parity` and
 `test/codex-parity-contract.test.mjs` fail if any contract member is missing,
 stubbed, or extra. See [compat/README.md](compat/README.md) and
 [docs/CODEX_PARITY.md](docs/CODEX_PARITY.md).
+
+The internal identifiers `agentos-chrome-cdp`, `AGENTOS_CHROME_CONFIG`, and the
+existing AgentOS configuration path are retained for upgrade compatibility;
+the public display name is Chrome Faithful.
 
 ## Testing
 

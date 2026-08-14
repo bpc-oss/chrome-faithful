@@ -2,12 +2,12 @@
   "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/main/schemas/mcpb-manifest-v0.4.schema.json",
   "manifest_version": "0.4",
   "name": "agentos-chrome-cdp",
-  "display_name": "Agent OS Chrome CDP",
+  "display_name": "Chrome Faithful",
   "version": "0.4.0",
   "description": "Control exact existing Chrome profiles through an authenticated localhost chrome.debugger bridge.",
   "long_description": "Provides Codex-compatible exact-profile Chrome tabs, locators, raw CDP, event streaming, screenshots, history, clipboard, coordinate input, page File plus DataTransfer injection, profile-bound page asset export, durable virtual-list capture, and a verification-handling module (challenge detection, hold/resume, human handoff, overlay dismissal, humanized input, slider/checkbox solvers, OCR/ASR backend capture). It never launches a debug profile or remote-debugging port.",
   "author": {
-    "name": "Agent OS"
+    "name": "bpc-oss"
   },
   "server": {
     "type": "node",
@@ -190,8 +190,8 @@
   "user_config": {
     "config_file": {
       "type": "file",
-      "title": "Agent OS Chrome configuration",
-      "description": "Select the private external config.json created by the Agent OS Chrome CDP installer.",
+      "title": "Chrome Faithful configuration",
+      "description": "Select the private external config.json created by the Chrome Faithful installer (the AgentOS path is retained for upgrade compatibility).",
       "required": true,
       "default": "${HOME}/AppData/Local/AgentOS/agentos-chrome-cdp/config.json"
     }

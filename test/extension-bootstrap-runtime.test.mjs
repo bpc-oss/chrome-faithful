@@ -254,7 +254,7 @@ test("options bootstrap executes on the configured port and keeps the host page 
   assert.equal(JSON.stringify(local.values).includes(grant), false);
   assert.equal(JSON.stringify(session.values).includes(grant), false);
   assert.deepEqual(removedTabs, []);
-  assert.equal(document.title, "Agent OS Chrome CDP - connected");
+  assert.equal(document.title, "Chrome Faithful - connected");
   assert.match(fields.get("status").textContent, /已安全连接：Profile A/);
 });
 
@@ -320,7 +320,7 @@ test("options bootstrap exposes only a bounded failure stage in the window title
     Date
   );
 
-  assert.equal(document.title, "Agent OS Chrome CDP - bootstrap-error:offscreen-reset");
+  assert.equal(document.title, "Chrome Faithful - bootstrap-error:offscreen-reset");
   assert.equal(document.title.includes(token), false);
   assert.equal(document.title.includes("private transport detail"), false);
 });
@@ -391,7 +391,7 @@ test("options bootstrap rejects a userinfo-prefix bridge URL before storing cred
   assert.deepEqual(local.values, {});
   assert.deepEqual(session.values, {});
   assert.equal(runtimeMessages, 0);
-  assert.equal(document.title, "Agent OS Chrome CDP - bootstrap-error:validate-binding");
+  assert.equal(document.title, "Chrome Faithful - bootstrap-error:validate-binding");
   assert.equal(JSON.stringify(local.values).includes("must-not-be-stored"), false);
 });
 

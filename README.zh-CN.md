@@ -14,15 +14,15 @@
 
 ## 为什么存在
 
-大多数浏览器 MCP 服务走两条捷径，而两条路都会丢掉你的浏览器：
+不同浏览器控制工具针对的是不同任务：
 
 | 方案 | 你得到什么 | 你失去什么 |
 |---|---|---|
-| [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)（Google 官方） | 基于 CDP 的 DevTools 式接管 | Chrome 136+ 在**默认配置文件**上禁止远程调试；扩展支持需要单独的 `--user-data-dir`，真实登录态没了 |
-| Playwright / Puppeteer MCP 服务 | 一个全新的无头浏览器 | 登录态、Cookie、扩展、历史、双因素会话——一切让浏览器"属于你"的东西 |
-| 基于扩展的 MCP（[BrowserMCP](https://github.com/browsermcp/mcp)、[real-browser-mcp](https://github.com/ofershap/real-browser-mcp)） | 控制真实浏览器 | 最接近的方案，但通常单会话、要求 Chrome 已运行、安全模型较薄 |
+| [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)（Google 官方） | 很强的 DevTools、性能与 CDP 工作流；Chrome 144+ 可经用户授权 `autoConnect` 到已运行的本地浏览器 | Chrome 必须已经运行；多个 Profile 活跃时由 Chrome 选择默认 Profile，不能按名称精确指定 |
+| Playwright / Puppeteer MCP 服务 | 确定、隔离的浏览器，非常适合 CI 与可重复测试 | 现有登录态、扩展、历史与双因素会话需要另行配置 |
+| 基于扩展的 MCP（[BrowserMCP](https://github.com/browsermcp/mcp)、[real-browser-mcp](https://github.com/ofershap/real-browser-mcp)） | 控制已有登录态的浏览器 | 很适合实时会话；多 Profile 可能需要分别运行服务和端口，通常也要求 Chrome 已经运行 |
 
-Chrome Faithful 是无需妥协的版本：
+Chrome Faithful 聚焦于 fail-closed 本地桥接下的精确、多 Profile 控制：
 
 - **精确多 Profile 路由。** 每个 Profile 以精确的 `profileName` 注册；重复注册会被拒绝，并发智能体无法在同一 Profile 内互相干扰。
 - **能拉起已关闭的 Profile。** 目标 Profile（或整个 Chrome）关闭时，用普通 Chrome 启动*精确的* Profile，并在扩展精确注册后才报告成功。没有 `--user-data-dir` 这类 hack。
@@ -73,6 +73,11 @@ Chrome Faithful 是无需妥协的版本：
 `chrome_cdp` 的 `action=send` 不属于安全投影边界；它等同于把所选已登录 Profile 的 DevTools 权限交给 MCP 客户端。不要把该服务暴露给不可信客户端或共享 MCP 主机。
 
 完整模型与上报策略见 [SECURITY.md](SECURITY.md)。
+
+扩展的高权限是刻意且公开的：`debugger` 提供等同 DevTools 的控制；
+`history`、`downloads` 与剪贴板权限支撑对应工具。Host 访问仅限
+`http://127.0.0.1/*` 本地桥接。若需要确定、一次性的 CI 浏览器，应使用
+Playwright 或 Puppeteer。
 
 ## 快速上手（Windows）
 
@@ -143,7 +148,7 @@ npm ci --ignore-scripts
 
 **拟人输入** —— 种子化贝塞尔轨迹 + 抖动、滑块单调 X、缓入缓出时序（`src/verification/input.mjs`），确定性、可测试。
 
-**识别后端是外部且可选的。** 通过 `AGENTOS_VERIFICATION_BACKEND` 环境变量启用，例如 `cli:python scripts/verification/captcha-backend-adapter.py`（面向 Python faster-whisper / OCR / opencv 栈的参考 JSON 适配器；能导入 Agent OS captcha 连接器时优先使用，否则回退到独立 faster-whisper / ddddocr / tesseract / opencv）或 HTTP 端点。没有后端时，检测、hold/resume、交接、遮罩清理、拟人交互全部照常工作。
+**识别后端是外部且可选的。** 通过 `AGENTOS_VERIFICATION_BACKEND` 环境变量启用，例如 `cli:python scripts/verification/captcha-backend-adapter.py`（面向 Python faster-whisper / OCR / opencv 栈的参考 JSON 适配器；能导入 Agent OS captcha 连接器时优先使用，否则回退到独立 faster-whisper / ddddocr / tesseract / opencv）或 HTTP 端点。没有后端时，检测、hold/resume、交接、遮罩清理、拟人交互全部照常工作。启用后，配置的进程或端点会收到本地捕获路径和/或挑战音频 URL 以及请求动作；HTTP 端点因此可能把挑战数据或凭据带到本项目之外。只配置你信任且获准使用的端点。
 
 设计：[docs/superpowers/specs/2026-08-14-verification-handling-design.md](docs/superpowers/specs/2026-08-14-verification-handling-design.md)
 
@@ -172,6 +177,8 @@ await tab.goto("https://example.com/");
 ## Codex 兼容性
 
 `src/agent-browser.mjs` 实现 Codex 的 `agent.browsers` 接口。parity 被机制化固定：`compat/` 存放本仓库自行编写的功能表面契约、适配映射及其 SHA-256，不再分发已安装产品附带的文档。`npm run check:parity` 与 `test/codex-parity-contract.test.mjs` 在任一契约成员缺失、被 stub 或多余时失败。见 [compat/README.md](compat/README.md) 与 [docs/CODEX_PARITY.md](docs/CODEX_PARITY.md)。
+
+内部标识 `agentos-chrome-cdp`、`AGENTOS_CHROME_CONFIG` 与既有 AgentOS 配置路径为升级兼容而保留；公开显示名称统一为 Chrome Faithful。
 
 ## 测试
 

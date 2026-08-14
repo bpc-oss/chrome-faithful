@@ -57,6 +57,22 @@ and do not expose the bridge or MCP server to other users or machines.
 Use `readEvents`, `readResponseJson*`, and `readRequestData` when a bounded,
 redacted Network projection is sufficient.
 
+## Extension permissions and optional backends
+
+The `debugger` permission is the core control capability and should be treated
+as equivalent to granting DevTools access to the selected profile. `history`,
+`downloads`, `clipboardRead`, and `clipboardWrite` support their named tools.
+The extension's only host permission is `http://127.0.0.1/*`, used for its
+authenticated local bridge; it does not request a general web-origin host
+permission.
+
+Verification recognition backends are disabled unless
+`AGENTOS_VERIFICATION_BACKEND` is set. When enabled, the configured process or
+HTTP endpoint receives an action plus a local capture path and/or challenge
+audio URL. An operator-selected HTTP service is outside this project's local
+trust boundary and may receive challenge data or credentials. Use only a
+backend you trust and are authorized to use.
+
 ## Scope notes
 
 - Windows installers, DPAPI backups, and the `.cmd` launcher are

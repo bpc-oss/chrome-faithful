@@ -18,12 +18,14 @@ reviewers care as much about safety invariants as about features.
 
 ## Development setup
 
+Node.js 22.12 or newer is required.
+
 ```bash
 npm ci --ignore-scripts   # puppeteer-core is used as a library; no browser download
 npm run check             # static gates (file presence, JSON validity, generic boundary)
 npm test                  # mock/unit tests (node --test)
 npm run build:extension   # regenerate extension/generated/puppeteer-runtime.js
-npm run check:parity      # Codex agent.browsers parity contract vs compat/ fixtures
+npm run check:parity      # repository-authored browser compatibility contract
 ```
 
 Installer transaction tests (Windows):

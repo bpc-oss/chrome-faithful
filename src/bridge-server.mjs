@@ -212,7 +212,7 @@ export async function startBridge(config, dependencies = {}) {
       });
       response.end(`<!doctype html>
 <meta charset="utf-8">
-<title>Agent OS Chrome CDP Fixture</title>
+<title>Chrome Faithful Fixture</title>
 <button id="clicker">Click me</button>
 <input id="text" aria-label="Fixture text">
 <input id="file" type="file">
@@ -529,5 +529,5 @@ file.addEventListener("change", () => {
 
 if (process.argv[1] === new URL(import.meta.url).pathname || process.argv[1]?.replaceAll("\\", "/") === new URL(import.meta.url).pathname.slice(1)) {
   const bridge = await startBridge();
-  process.stderr.write(`Agent OS Chrome CDP bridge listening on ${bridge.config.host}:${bridge.config.port}\n`);
+  process.stderr.write(`Chrome Faithful bridge listening on ${bridge.config.host}:${bridge.config.port}\n`);
 }

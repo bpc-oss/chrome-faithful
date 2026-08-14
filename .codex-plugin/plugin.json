@@ -3,14 +3,14 @@
   "version": "0.4.0",
   "description": "Provider-neutral Chrome extension bridge with a Codex-compatible agent.browsers API.",
   "author": {
-    "name": "Agent OS"
+    "name": "bpc-oss"
   },
   "skills": "./skills/",
   "interface": {
-    "displayName": "Agent OS Chrome CDP",
+    "displayName": "Chrome Faithful",
     "shortDescription": "Codex-compatible control of exact logged-in Chrome profiles.",
     "longDescription": "Controls exact existing Chrome profiles through chrome.debugger, an MV3 offscreen transport, a multi-profile local router, MCP tools, and a JavaScript agent.browsers compatibility adapter.",
-    "developerName": "Agent OS",
+    "developerName": "bpc-oss",
     "category": "Productivity",
     "capabilities": [
       "Interactive",
