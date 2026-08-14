@@ -1,0 +1,14 @@
+- insert:
+    - id: chrome-faithful-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: chrome_faithful
+        transport: stdio
+        command: !!js process.execPath
+        args:
+          - !!js >-
+              process.getBuiltinModule('node:module').createRequire(baseUrl).resolve('@bpc-oss/dsh-plugin-chrome-faithful/mcp-server')
+        env: !!js >-
+          process.env.AGENTOS_CHROME_CONFIG === undefined ? {} : { AGENTOS_CHROME_CONFIG: process.env.AGENTOS_CHROME_CONFIG }
+        toolCallTimeoutMs: 60000
+        failOnStartupError: true
