@@ -11,6 +11,8 @@ no Edge, no global mouse/keyboard automation.
 [![CI](https://github.com/bpc-oss/chrome-faithful/actions/workflows/ci.yml/badge.svg)](https://github.com/bpc-oss/chrome-faithful/actions/workflows/ci.yml)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-339933)
 
+**English** · [简体中文](README.zh-CN.md)
+
 ---
 
 ## Why this exists
