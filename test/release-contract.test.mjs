@@ -205,13 +205,14 @@ function assertBilingualReleaseContract(documents, bundleFiles) {
   for (const [key, expectedLines] of Object.entries(exactEvidenceLines)) {
     const evidence = productionEvidence(documents[key]);
     for (const line of expectedLines) {
-      assert.equal(evidence.split("\n").filter((candidate) => candidate === line).length, 1, `${key}: ${line}`);
+      const separator = line.includes("：") ? "：" : ":";
+      const label = line.slice(0, line.indexOf(separator) + 1);
+      assert.deepEqual(
+        evidence.split("\n").filter((candidate) => candidate.startsWith(label)),
+        [line],
+        `${key}: ${label}`
+      );
     }
-    assert.equal(
-      evidence.split("\n").filter((line) => /(?:raw character accuracy|原始字符准确率)/i.test(line)).length,
-      1,
-      `${key}: unique raw accuracy`
-    );
   }
 
   assert.deepEqual(bundleFiles, [
@@ -488,6 +489,27 @@ test("bilingual release documents preserve reciprocal links and locked facts", a
       acceptanceEnglish: value.acceptanceEnglish.replace(
         "- raw character accuracy: 99.43%",
         "- raw character accuracy: 99.43%\n- raw character accuracy: 98%"
+      )
+    })],
+    ["appended contradictory mean confidence", (value) => ({
+      ...value,
+      acceptanceEnglish: value.acceptanceEnglish.replace(
+        "- mean confidence: 0.9754",
+        "- mean confidence: 0.9754\n- mean confidence: 0.5000"
+      )
+    })],
+    ["appended contradictory minimum confidence", (value) => ({
+      ...value,
+      acceptanceChinese: value.acceptanceChinese.replace(
+        "- 最低置信度：0.9379",
+        "- 最低置信度：0.9379\n- 最低置信度：0.5000"
+      )
+    })],
+    ["appended contradictory latency", (value) => ({
+      ...value,
+      acceptanceEnglish: value.acceptanceEnglish.replace(
+        "- end-to-end call latency: 3233 ms, 2996 ms, 3245 ms",
+        "- end-to-end call latency: 3233 ms, 2996 ms, 3245 ms\n- end-to-end call latency: 1 ms, 1 ms, 1 ms"
       )
     })],
     ["raw CDP boundary", (value) => ({
