@@ -18,14 +18,16 @@ export const CHALLENGE_GUIDANCE = {
   ],
   turnstile: [
     "Click the Cloudflare Turnstile checkbox if visible.",
-    "If the checkbox never renders, the challenge is silent (invisible mode); wait for it to clear or reload."
+    "If the widget is silent (invisible mode), trigger the page's real submit/verify action so turnstile.execute() runs the actual challenge — a JS click on the submit button works even when the button is off-screen or covered.",
+    "If no token arrives after the challenge flow, the session is the usual culprit: sign out and back in (refresh the authentication state), then retry. Field data shows the same profile in a stale session never renders the challenge frame, while a fresh session completes it normally."
   ],
   "turnstile-pending": [
-    "The Turnstile widget loaded but its challenge frame did not render — usually a network/Cloudflare handshake stall.",
-    "Reload the page once and retry, or complete the challenge manually in the visible browser window."
+    "The Turnstile widget loaded but its challenge frame did not render — in field data the root cause is a stale/expired session, not a network handshake stall.",
+    "Fix order: (1) refresh the session — sign out and sign back in on the same profile (fresh authentication state made the challenge complete normally); (2) trigger the page's real submit/verify button with a JS click so turnstile.execute() starts the actual challenge; (3) reload the page once and retry; (4) only then complete the challenge manually in the visible browser window.",
+    "Never monkey-patch window.turnstile (getResponse / render-with-immediate-callback / injecting the hidden input): the backend validates the real token (fake/empty tokens are rejected, e.g. HTTP 422), and patching the widget callback cannot produce one."
   ],
   "recaptcha-v2-pending": [
-    "A reCAPTCHA widget is present but its challenge frame did not render — usually a network/Google handshake stall.",
+    "A reCAPTCHA widget is present but its challenge frame did not render — first refresh the session (sign out/in) and trigger the page's real submit action; only if that fails treat it as a network/Google stall.",
     "Reload the page once and retry, or complete the challenge manually in the visible browser window."
   ],
   geetest: [

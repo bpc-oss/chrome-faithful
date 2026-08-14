@@ -83,10 +83,12 @@ export function classifyChallenges(page) {
   }
   const text = ((page.textSample || "") + " " + (page.title || "")).toLowerCase();
   const textHits = CHALLENGE_TEXT_SIGNALS.filter((signal) => text.includes(signal.toLowerCase()));
-  // Widget rendered but no provider iframe and no token: stuck pre-render
-  // handshake (commonly Turnstile on flaky networks). More specific than a
-  // bare text signal, so it is classified first. Static provider markers
-  // (e.g. the reCAPTCHA badge) are filtered again here as defense in depth.
+  // Widget rendered but no provider iframe and no token: stuck pre-render.
+  // Field data shows the usual cause is a stale/expired session rather than
+  // flaky networks — see handoff guidance "refresh session → trigger real
+  // submit". More specific than a bare text signal, so it is classified first.
+  // Static provider markers (e.g. the reCAPTCHA badge) are filtered again here
+  // as defense in depth.
   const pendingClasses = (page.pendingWidgets || []).filter((c) => !STATIC_MARKER_PATTERN.test(c));
   if (challenges.length === 0 && pendingClasses.length > 0) {
     const joined = pendingClasses.join(" ").toLowerCase();

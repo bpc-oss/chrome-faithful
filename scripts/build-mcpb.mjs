@@ -18,11 +18,20 @@ for (const name of ["src", "package.json", "package-lock.json"]) {
 }
 
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-const install = spawnSync(npmCommand, ["ci", "--omit=dev", "--ignore-scripts"], {
-  cwd: path.join(stage, "server"),
-  env: process.env,
-  stdio: "inherit"
-});
+// Windows: spawnSync cannot exec .cmd files directly (EINVAL); route through
+// the shell. Args are hard-coded constants (no injection surface).
+const install = spawnSync(
+  process.platform === "win32"
+    ? `${npmCommand} ci --omit=dev --ignore-scripts`
+    : npmCommand,
+  process.platform === "win32" ? [] : ["ci", "--omit=dev", "--ignore-scripts"],
+  {
+    cwd: path.join(stage, "server"),
+    env: process.env,
+    stdio: "inherit",
+    shell: process.platform === "win32"
+  }
+);
 if (install.error) throw install.error;
 if (install.status !== 0) {
   throw new Error(`production dependency install failed with exit code ${install.status}`);
