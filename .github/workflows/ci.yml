@@ -19,6 +19,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
+      - run: node --test test/dsh-package-isolation.test.mjs
       - run: npm run check
       - run: npm run check:parity
       - run: npm run build:extension
@@ -35,6 +36,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
+      - run: node --test test/dsh-package-isolation.test.mjs
       - run: npm run check
       - run: npm run check:parity
       - run: npm run build:extension
