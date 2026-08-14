@@ -2,88 +2,84 @@
 
 ## Current state
 
-- Goal: keep the provider-neutral Chrome Faithful core and add a first-party
-  DeepSeek Harness bundle without duplicating browser control logic.
-- Branch: `codex/dsh-bundle-implementation`.
-- Repository and remote remain private. Nothing in this branch has been pushed,
-  published to npm, installed into a live DSH profile, or activated against a
-  live Chrome profile.
-- The bundle targets the reviewed DSH host contract beginning at
-  `@deepseek-ai/dsh 0.1.0-rc.6`; DSH is still release-candidate software and the
-  composition contract must be revalidated for every RC.
+- Provider-neutral Chrome Faithful core plus first-party DSH bundle is complete.
+- Branch: `codex/dsh-bundle-implementation`; release-fix commit `e0f4a00` is on
+  both `origin/main` and `origin/codex/dsh-bundle-implementation`.
+- GitHub repository remains private. Nothing has been published to npm and no
+  repository visibility change was made.
+- A local-first DSH vision extension is approved and documented, but only its
+  design (`933faf8`) and implementation plan (`80c6ad2`) exist locally. No
+  visual implementation or model/runtime installation has started.
+- DSH support targets `@deepseek-ai/dsh 0.1.0-rc.6`; revalidate composition for
+  every DSH RC.
 
-## Implemented
+## Release closeout completed
 
-- Added stable core exports for `chrome-faithful` and
-  `chrome-faithful/mcp-server`.
-- Added independently packable
-  `@bpc-oss/dsh-plugin-chrome-faithful@0.4.0` with an exact
-  `chrome-faithful@0.4.0` dependency and Node `>=22.12.0` floor.
-- Composed the host-provided `@deepseek-ai/dsh-mcp-client` through one Cordis
-  patch using `process.execPath`, absolute launcher resolution,
-  `failOnStartupError: true`, a conditional string-only environment map, and a
-  60-second tool timeout.
-- Added parsed/evaluated DSH contract tests and paired-tarball isolation tests
-  that deliberately exclude profile `.bin` from `PATH`.
-- Added bilingual first-class DSH documentation and independent npm package
-  allowlists.
-- Corrected both Windows installers after the public display-name rename had
-  left their fail-closed manifest checks on the old name.
+- Rewrote every reachable commit author/committer identity from the personal
+  email to `bpc-oss <bpc-oss@users.noreply.github.com>`, then force-updated the
+  private remote with a lease. Local and `origin/main` old-email counts are 0.
+- Stored the pre-rewrite recovery bundle outside the repository at
+  `%LOCALAPPDATA%\AgentOS\backups\chrome-faithful-history\20260814T123100Z`.
+  Bundle SHA-256:
+  `1682b89a4670dd8d49952cb408daa2c5f9dc0480655e34d3095a2e6195171baf`.
+- Fixed WSL-launched Windows Agent Lessons discovery when inherited `PATHEXT`
+  omitted `.EXE`. Global Agent OS backup `20260814T122443Z` was created before
+  the change. Fresh `validate`, `closeout`, and `stats` returned
+  `VALIDATION_PASSED`, `CLOSEOUT_COMPLETED`, and `STATS_COMPLETED`.
+- Kept Agent Lessons outputs `.agent-os/` and `docs/agent-lessons.md` untracked;
+  they are private/generated evidence and must not be staged.
+- Fixed Windows release contracts, DSH tarball isolation, PowerShell 7 ACL API
+  compatibility, and private storage ownership normalization. Exact access
+  rules remain current user plus `SYSTEM`; temporary directories owned by the
+  built-in Administrators group are normalized to the current user.
 
 ## Verification evidence
 
-All Node checks used Node `v22.12.0` from this worktree.
+- GitHub Actions run
+  `https://github.com/bpc-oss/chrome-faithful/actions/runs/31804452839` at
+  `e0f4a00`: Ubuntu and Windows jobs both passed. The Windows job passed DSH
+  host/isolation, checks, parity, extension build/diff, full Node tests, and
+  installer transactions.
+- Node `v22.12.0`: 218/218 tests passed; `CHECK_OK`; parity passed with 22
+  interfaces, 135 members, and contract hash `ab80319f...`.
+- Windows PowerShell 5.1 and PowerShell 7 installer transaction suites both
+  returned `PASS`, including apply/restore, absent target, fault rollback,
+  Claude untouched, and production guard checks.
+- Disposable DSH/Chrome acceptance receipt:
+  `%LOCALAPPDATA%\AgentOS\reports\chrome-faithful\dsh-live-acceptance-20260814.json`.
+  It records `PASS` with DSH `0.1.0-rc.6`, Chrome for Testing
+  `152.0.7977.42`, 37 namespaced tools, startup failure rejection with 0 tools
+  registered, a DSH-side `chrome_profiles` call, and verified exact-profile
+  binding. The disposable DSH profile, packages, config, Chrome profile, and
+  process were removed; the receipt remains.
+- Live acceptance installed paired local tarballs. Because pnpm v10 otherwise
+  tried the registry for the unpublished core child dependency, the disposable
+  profile used a temporary workspace override binding the core to its local
+  tarball. Published artifacts were not changed.
+- Existing Chrome sessions and the live port 18755 service were not used or
+  modified.
 
-- `npm ci --ignore-scripts`: pass; 149 packages, 0 vulnerabilities.
-- `npm run check`: `CHECK_OK`.
-- `npm run check:parity`: pass; 22 interfaces, 135 members, contract hash
-  `ab80319...`.
-- `npm run build:extension` plus
-  `git diff --exit-code -- extension/generated/`: pass; generated runtime
-  SHA-256 `13def5cda71c4f375cffa3ae4f550c0deee5497ee2b0f6f913dbfbee26f8868e`.
-- `npm test`: 218 tests, 218 pass, 0 fail, 0 skipped.
-- `npm audit --omit=dev`: 0 vulnerabilities.
-- `npm run build:mcpb`: pass.
-- `node --test test/dsh-host-contract.test.mjs test/dsh-package-isolation.test.mjs`:
-  4 tests, 4 pass. Both implicit and explicit missing-config branches reached
-  the core through published DSH rc.6 Boot/Include/MCP Client, rejected
-  activation, and left the supplied tool registry empty.
-- Core dry-run package: 71 entries; DSH dry-run package: exactly `LICENSE`,
-  `README.md`, `bin/chrome-faithful-mcp.mjs`, `cordis.patch.yml`, and
-  `package.json`.
-- Windows PowerShell `test/installer-transactions.test.ps1`: `PASS`, including
-  extension/client apply-restore, absent-target restore, fault rollback,
-  untouched Claude configuration, and the production guard in `finally`.
-- `git diff --check`: pass.
+## DSH local vision decision
 
-## Decisions and remaining gates
+- Approved direction: default local PP-OCRv5 mobile text/coordinate extraction
+  plus a disabled-by-default local VLM adapter for SmolVLM2, Moondream, or a
+  compatible user-operated backend.
+- Design:
+  `docs/superpowers/specs/2026-08-14-dsh-local-vision-design.md`.
+- Plan: `docs/superpowers/plans/2026-08-14-dsh-local-vision.md`.
+- The core will reuse exact-profile screenshots and return bounded text-only
+  JSON because DSH rc.6 discards MCP image blocks. No cloud upload, automatic
+  model download, Python installation, or bundled weights are allowed.
+- Implementation is waiting for the user's execution-mode choice: explicit
+  subagent-driven work or inline execution in the current task.
 
-- The existing extension, bridge, exact-profile routing, raw CDP trust boundary,
-  and existing client integrations remain the core; the DSH package is only a
-  composition bundle.
-- No DSH-specific UI or duplicate browser implementation was added.
-- A disposable live DSH/Chrome acceptance run remains not run because it would
-  change a user-owned profile and requires a separately chosen disposable
-  `DSH_HOME` and explicit activation scope.
-- GitHub Actions on this branch cannot run until it is pushed; current evidence
-  is local CI-equivalent evidence only.
-- The repository's existing ten historical commits expose
-  `bpc-oss@users.noreply.github.com`. Decide whether to preserve or rewrite private history
-  before making the repository public; no history rewrite has been performed.
-- Push, npm publication, repository visibility changes, live-profile install,
-  and history rewriting remain external/destructive release actions and were
-  intentionally not performed.
-- Independent implementation review verdict: `APPROVED` at `c1c2922`. The
-  reviewer reran Node 22 release/DSH tests, Windows installer transactions,
-  audits, package inventories, and immutable source-link checks. No unresolved
-  critical, high, medium, or low finding remains in the reviewed scope.
+## Remaining gates
 
-## Key commits
-
-- `0493d9c` — package boundary and launcher.
-- `94cdc78` — DSH composition contract.
-- `a772247` — paired-tarball isolation and CI coverage.
-- `297039e` — DSH documentation and packaging gates.
-- `0e79adc` — Windows installer display-name contract repair.
-- `c26462b` — published DSH rc.6 host proof, compatibility export, and notices.
-- `c1c2922` — immutable DSH source notices and URL regression gate.
+- Independent closeout review of `c1c2922..e0f4a00`, history rewrite, Agent
+  Lessons fix, live receipt, and CI is in progress. Resolve every finding before
+  claiming release closeout complete.
+- The visual design/plan commits are local only and intentionally were not
+  pushed into the already-green release-fix CI run.
+- GitHub Actions reports a non-failing platform annotation that pinned checkout
+  and setup-node actions still declare Node 20 metadata while GitHub forces
+  them to Node 24. Track upstream pinned releases; do not unpin actions.
