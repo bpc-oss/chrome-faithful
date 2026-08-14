@@ -355,7 +355,7 @@ Reviewer inspects actual files and reruns focused evidence. Required output is
 No critical/high finding may remain. Medium/low findings must be fixed or
 explicitly accepted as residual risk in `HANDOFF.md`.
 
-- [ ] **Step 6: Commit closeout documentation**
+- [x] **Step 6: Commit closeout documentation**
 
 ```bash
 git add HANDOFF.md docs/superpowers/plans/2026-08-14-dsh-first-party-bundle.md
