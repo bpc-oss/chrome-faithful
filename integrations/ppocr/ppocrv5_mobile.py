@@ -202,6 +202,7 @@ def _ocr(request):
                 use_doc_orientation_classify=False,
                 use_doc_unwarping=False,
                 use_textline_orientation=False,
+                enable_mkldnn=False,
             )
             predictions = engine.predict(input=image)
             return _convert_predictions(predictions)

@@ -25,6 +25,7 @@ class PaddleOCR:
         assert kwargs["use_doc_orientation_classify"] is False
         assert kwargs["use_doc_unwarping"] is False
         assert kwargs["use_textline_orientation"] is False
+        assert kwargs["enable_mkldnn"] is False
 
     def predict(self, input):
         assert input["decoded_bytes"] > 8

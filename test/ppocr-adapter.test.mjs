@@ -89,7 +89,7 @@ test("adapter status reports missing local model directories without downloading
   });
 });
 
-test("adapter converts a fake PaddleOCR v5 prediction", async () => {
+test("adapter converts a PaddleOCR v5 prediction with portable CPU settings", async () => {
   const { result } = await withModelDirs((modelEnv) => runPythonAdapter({
     action: "ocr",
     imageBase64: pngBase64(),

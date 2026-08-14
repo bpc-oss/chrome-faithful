@@ -84,10 +84,17 @@
   request, response, timeout, text, block-count, pixel, and final-result bounds.
 - DSH forwards only six declared string environment variables. No model,
   Python runtime, PaddleOCR dependency, or VLM weights are bundled.
-- Selected local Python status returned
-  `{"available":false,"backend":"ppocrv5-mobile","reason":"local_models_missing"}`.
-  This is `OPTIONAL_LIVE_OCR_UNVERIFIED_MISSING_DEPENDENCY`; no dependency or
-  model was installed and no cloud fallback was used.
+- Real PP-OCRv5 mobile quality acceptance passed through a disposable Chrome
+  extension, bridge, MCP server, and `chrome_visual_extract`. The controlled
+  mixed Chinese/English corpus detected 7/7 blocks, reached 99.43% raw and 100%
+  non-whitespace character accuracy, had 0.9754 mean/0.9379 minimum
+  confidence, valid normalized coordinates and reading order, and produced
+  identical output across three 3.00--3.25 second calls. See
+  `docs/visual-model-acceptance-2026-08-14.md`.
+- PaddlePaddle 3.3.1's default oneDNN path failed on the acceptance AMD CPU.
+  A single-variable diagnostic proved that `enable_mkldnn=False` restores
+  inference; the adapter now selects that portable CPU path and its regression
+  fixture requires it.
 
 ## Verification on the visual tree
 
@@ -123,10 +130,9 @@
 
 ## Remaining gates
 
-- Optional real OCR/VLM quality acceptance remains unavailable until the user
-  supplies local model directories and runtime dependencies. Keep this clearly
-  separate from the completed transport, packaging, host-contract, and CI
-  acceptance; do not download models or use a cloud fallback implicitly.
+- Optional VLM quality acceptance remains unrun. Keep it separate from the
+  completed PP-OCRv5 mobile acceptance; do not download or enable a VLM or use
+  a cloud fallback implicitly.
 - GitHub Actions may emit a non-failing annotation because pinned checkout and
   setup-node revisions declare older Node metadata while GitHub forces Node 24.
   Track upstream pinned releases; do not unpin actions.

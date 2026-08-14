@@ -18,6 +18,9 @@ platform default. The adapter passes both directories explicitly to
 `PaddleOCR`; it never asks PaddleOCR to resolve a model by name alone, runs a
 package installer, downloads weights, writes screenshots, or calls a remote
 API. Missing dependencies or directories produce a bounded error response.
+The adapter disables oneDNN/MKLDNN when constructing PaddleOCR so the same
+local CPU path works on Intel and AMD hosts; this favors portability over the
+optional oneDNN acceleration.
 
 Status request:
 
