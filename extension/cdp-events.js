@@ -78,7 +78,7 @@ function compactNetworkParams(method, params = {}) {
 }
 
 export function publicCdpEvent(event, options = {}) {
-  if (options.includeSensitive === true || !event.method?.startsWith("Network.")) return event;
+  if (!event.method?.startsWith("Network.")) return event;
   return {
     sequence: event.sequence,
     method: event.method,

@@ -31,7 +31,7 @@ Chrome Faithful 是无需妥协的版本：
 - **媒体导出不泄露 URL。** `chrome_page_asset` 使用该标签页的 UA、referer 和对应 Profile 的 Cookie 流式导出页面媒体；签名 URL、Cookie、Header 永不进入 MCP 参数或结果。
 - **持久化虚拟列表采集。** 滚动采集带资产校验、fail-closed 清单、跨进程独占锁，以及通过串行化滚轮事件回卷标签页的续采——为无限滚动信息流而生。
 - **窗口最小化也能工作。** 定位器等待/操作与截图使用 CDP focus 仿真，窗口最小化或被遮挡时虚拟化控件仍能渲染。
-- **需要时可用原始 CDP。** `chrome_cdp` 带脱敏网络投影；请求/响应体留在插件内部，token/cookie/header 字段被拒绝出现在结果中。
+- **需要时可用原始 CDP，并明确划定信任边界。** `chrome_cdp` 的事件读取会脱敏 Network header、查询参数和 post data；有界请求/响应投影会拒绝选择敏感字段。但 `send` 是刻意保留的无限制原始 CDP，只能交给完全可信的 MCP 客户端：它可以读取已登录页面内容、Cookie、存储、token、URL 与 header。
 - **结构化验证处理。** 多信号挑战检测，区分*已解决* / *待渲染* / *活动挑战*三种状态；对常见的"点一下就能过"场景采用**点击优先**求解；需要人工时给出诚实的交接——见[验证处理](#验证处理)。
 - **Codex 兼容 JS API。** `src/agent-browser.mjs` 实现 Codex 的 `agent.browsers` 接口（标签页、定位器、CUA、Playwright 风格选择器、剪贴板、对话框、下载），JS 智能体可直接使用同一运行时。
 
@@ -70,11 +70,13 @@ Chrome Faithful 是无需妥协的版本：
 6. 浏览器工作前必须通过标签页与 `Runtime.evaluate` 的在线自检。
 7. Profile 与标签页失败直接返回给调用智能体，无需用户侧控制台检查。
 
+`chrome_cdp` 的 `action=send` 不属于安全投影边界；它等同于把所选已登录 Profile 的 DevTools 权限交给 MCP 客户端。不要把该服务暴露给不可信客户端或共享 MCP 主机。
+
 完整模型与上报策略见 [SECURITY.md](SECURITY.md)。
 
 ## 快速上手（Windows）
 
-前置：Node.js >= 20、Chrome、PowerShell（只有安装器和 `.cmd` 启动器是 Windows 专属；扩展、桥接、MCP 服务均为平台无关）。
+前置：Node.js >= 22.12、Chrome、PowerShell（只有安装器和 `.cmd` 启动器是 Windows 专属；扩展、桥接、MCP 服务均为平台无关）。
 
 ```powershell
 npm ci --ignore-scripts

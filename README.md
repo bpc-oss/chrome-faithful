@@ -52,9 +52,12 @@ Chrome Faithful is the version with no trade-offs:
 - **Works minimized.** Locator waits/actions and screenshots use CDP focus
   emulation, so virtualized controls keep rendering even when the Chrome
   window is minimized or obscured.
-- **Raw CDP when you need it.** `chrome_cdp` with redacted network projections;
-  request/response bodies stay inside the plugin and token/cookie/header
-  fields are rejected from results.
+- **Raw CDP when you need it, with an explicit trust boundary.** `chrome_cdp`
+  event reads redact Network headers, query strings, and post data; the bounded
+  request/response projection actions reject sensitive selected fields. Its
+  `send` action is deliberately unrestricted raw CDP and must be exposed only
+  to a fully trusted MCP client: it can read authenticated page content,
+  cookies, storage, tokens, URLs, and headers.
 - **Structured verification handling.** Multi-signal challenge detection that
   distinguishes *resolved* / *pending-render* / *active challenge* states,
   click-first solving for the common "click once and it passes" cases, and an
@@ -111,11 +114,15 @@ Chrome Faithful is the version with no trade-offs:
 7. Profile and tab failures are returned to the calling agent with no
    user-side console inspection required.
 
+`chrome_cdp` with `action=send` is outside the safe-projection boundary. It is
+equivalent to granting the MCP client DevTools access to the selected logged-in
+profile. Do not enable this server for untrusted clients or shared MCP hosts.
+
 See [SECURITY.md](SECURITY.md) for the full model and reporting policy.
 
 ## Quick start (Windows)
 
-Prerequisites: Node.js >= 20, Chrome, PowerShell (only the installers and the
+Prerequisites: Node.js >= 22.12, Chrome, PowerShell (only the installers and the
 `.cmd` launcher are Windows-specific; the extension, bridge, and MCP server are
 platform-neutral).
 

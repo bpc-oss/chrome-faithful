@@ -32,7 +32,9 @@ test("Network event output keeps requestId but redacts headers, query strings, a
   assert.equal(safe.params.response.url, "https://example.test/list");
   assert.equal("headers" in safe.params.response, false);
   assert.equal(JSON.stringify(safe).includes("secret"), false);
-  assert.deepEqual(publicCdpEvent(event, { includeSensitive: true }), event);
+  const requestedSensitive = publicCdpEvent(event, { includeSensitive: true });
+  assert.equal("headers" in requestedSensitive.params.response, false);
+  assert.equal(JSON.stringify(requestedSensitive).includes("secret"), false);
 });
 
 test("event pagination supports Network method-prefix and URL filters", () => {

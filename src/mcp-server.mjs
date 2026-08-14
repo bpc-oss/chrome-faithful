@@ -25,6 +25,7 @@ import {
   summarizeNetworkJsonBody
 } from "./network-response.mjs";
 import { summarizeNetworkRequestPostData } from "./network-request.mjs";
+import { publicCdpEventOptions } from "./cdp-policy.mjs";
 import { runProfileSelftest } from "./selftest.mjs";
 import {
   detectChallenge,
@@ -131,7 +132,7 @@ const schemas = [
   },
   {
     name: "chrome_cdp",
-    description: "Send a raw CDP command, read buffered events, or parse Network data as bounded projections in one exact profile. readEvents supports cursor and redacted filters. readResponseJson accepts one requestId; batch/events variants group equivalent response item sets. Response actions accept shapePaths to reveal only safe nested key names/types before selecting known scalar rootFields. readRequestData returns only an allowlisted projection of a request POST body (cursor/count/status/type/scene and related paging fields), plus integrity metadata. Raw bodies stay inside the plugin; URL/token/cookie/header/secret fields are rejected.",
+    description: "Use raw CDP or bounded Network projections in one exact profile. action=send is an unrestricted, fully trusted CDP capability and may return authenticated page content, cookies, storage, tokens, URLs, and headers. readEvents always redacts Network headers, query strings, and post data. Response/request projection actions keep raw bodies inside the plugin and reject sensitive selected fields.",
     inputSchema: {
       type: "object",
       properties: {
@@ -152,8 +153,7 @@ const schemas = [
             methods: { type: "array", items: { type: "string" } },
             methodPrefixes: { type: "array", items: { type: "string" } },
             urlIncludes: { type: "array", items: { type: "string" } },
-            target: { type: "object" },
-            includeSensitive: { type: "boolean" }
+            target: { type: "object" }
           },
           additionalProperties: false
         },
@@ -938,7 +938,7 @@ server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
       if (args.action === "readEvents") {
         return textResult(await router.request(args.profileName, "cdp.readEvents", {
           tabId: args.tabId,
-          options: args.options || {}
+          options: publicCdpEventOptions(args.options)
         }));
       }
       if (args.action === "readResponseJson") {

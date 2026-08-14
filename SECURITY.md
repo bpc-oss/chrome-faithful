@@ -37,12 +37,25 @@ machine-checked where possible and are enforced by design:
    default). A config inside the plugin tree is rejected.
 6. **Evidence discipline.** Screenshots, page assets, and scroll-capture
    manifests are written through bounded temp files, validated, and atomically
-   moved into place. Signed URLs, cookies, tokens, and headers are never
-   returned through MCP results and are redacted from projections.
+   moved into place. The dedicated page-asset and Network projection APIs do
+   not return signed URLs, cookies, tokens, or headers. Buffered Network event
+   reads always remove headers, query strings, and post data.
 7. **Transactional installers.** Client/extension installers back up prior
    state (DPAPI-encrypted, current-user + SYSTEM DACL on Windows), verify
    SHA-256 before every write, and roll back only targets proven to have been
    committed by that transaction.
+
+## Fully trusted raw CDP boundary
+
+`chrome_cdp` with `action=send` deliberately exposes unrestricted CDP for
+advanced diagnostics and automation. A trusted caller can use it to read page
+content, cookies, browser storage, tokens, URLs, request headers, and other
+authenticated state available to `chrome.debugger`. This is not a redacted
+interface. Treat every configured MCP client and host process as fully trusted,
+and do not expose the bridge or MCP server to other users or machines.
+
+Use `readEvents`, `readResponseJson*`, and `readRequestData` when a bounded,
+redacted Network projection is sufficient.
 
 ## Scope notes
 
