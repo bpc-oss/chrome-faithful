@@ -4,10 +4,11 @@
 
 - Provider-neutral Chrome Faithful core, first-party DSH bundle, and local-first
   visual extraction are implemented on `codex/dsh-bundle-implementation`.
-- The private remote feature branch and `main` contain the reviewed visual
+- The public remote feature branch and `main` contain the reviewed visual
   implementation, live OCR fix, and bilingual release presentation through
-  `8f5579b`; GitHub Actions run `31820835312` passed.
-- Nothing has been published to npm and repository visibility was not changed.
+  `1ea2482`; GitHub Actions run `31821231998` passed.
+- GitHub release `v0.4.0` is public. This is a GitHub-only source release;
+  neither npm package has been published.
 - DSH support targets `@deepseek-ai/dsh 0.1.0-rc.6`; revalidate composition for
   every DSH RC.
 - Agent Lessons outputs `.agent-os/` and `docs/agent-lessons.md` are private,
@@ -150,10 +151,10 @@
   returned `APPROVED` after three finding-and-repair cycles closed package,
   semantic-boundary, readability, and additive-contradiction gaps.
 - GitHub Actions run
-  `https://github.com/bpc-oss/chrome-faithful/actions/runs/31820835312` at
-  `8f5579b` passed Ubuntu and Windows, including MCPB and Windows installer
-  transaction tests. The repository remained private and no npm package, tag,
-  or GitHub release was published.
+  `https://github.com/bpc-oss/chrome-faithful/actions/runs/31821231998` at
+  `1ea2482` passed Ubuntu and Windows, including MCPB and Windows installer
+  transaction tests. The repository and bilingual GitHub release `v0.4.0` are
+  public; npm publication remains deliberately out of scope.
 
 ## Remaining gates
 
