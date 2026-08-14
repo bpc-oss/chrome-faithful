@@ -1,0 +1,14 @@
+# Dependencies and build artifacts
+node_modules/
+dist/
+
+# Machine-specific or private state
+config/local.json
+config/local.json.bak-*
+backups/
+reports/
+
+# Logs and OS noise
+*.log
+.DS_Store
+Thumbs.db

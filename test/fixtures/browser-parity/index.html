@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Agent OS browser parity fixture</title>
+  <style>
+    body { font-family: sans-serif; margin: 24px; }
+    .hidden { display: none; }
+    iframe { width: 500px; height: 120px; border: 1px solid #888; }
+  </style>
+</head>
+<body>
+  <h1>Browser parity fixture</h1>
+  <label for="fixture-input">Fixture input</label>
+  <input id="fixture-input" data-testid="fixture-input" placeholder="type here">
+  <button id="save" aria-label="Save fixture">Save</button>
+  <button class="hidden" aria-label="Save fixture">Hidden save</button>
+  <input id="check" type="checkbox">
+  <select id="choice"><option value="a">Alpha</option><option value="b">Beta</option></select>
+  <input id="files" type="file" multiple>
+  <button id="prompt" onclick="window.fixturePrompt = prompt('Fixture prompt', 'default')">Prompt</button>
+  <button id="confirm" onclick="window.fixtureConfirm = confirm('Fixture confirm')">Confirm</button>
+  <a id="download" href="/download.txt" download="download.txt">Download fixture</a>
+  <a id="navigate" href="/next.html">Navigate</a>
+  <iframe id="fixture-frame" src="/frame.html"></iframe>
+  <script>
+    window.fixtureClicks = 0;
+    document.querySelector("#save").addEventListener("click", () => { window.fixtureClicks += 1; });
+  </script>
+</body>
+</html>

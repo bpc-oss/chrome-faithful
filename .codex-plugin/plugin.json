@@ -1,0 +1,26 @@
+{
+  "name": "agentos-chrome-cdp",
+  "version": "0.3.1+codex.20260801130514",
+  "description": "Provider-neutral Chrome extension bridge with a Codex-compatible agent.browsers API.",
+  "author": {
+    "name": "Agent OS"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Agent OS Chrome CDP",
+    "shortDescription": "Codex-compatible control of exact logged-in Chrome profiles.",
+    "longDescription": "Controls exact existing Chrome profiles through chrome.debugger, an MV3 offscreen transport, a multi-profile local router, MCP tools, and a JavaScript agent.browsers compatibility adapter.",
+    "developerName": "Agent OS",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "List the connected Chrome profiles and run the browser self-test.",
+      "Use the exact requested Chrome profile for this browser task."
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}

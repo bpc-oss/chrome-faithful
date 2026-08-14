@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "chrome-faithful": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["src/mcp-server.mjs"],
+      "env": {
+        "AGENTOS_CHROME_SCHEMA_CACHEBUSTER": "20260801130514"
+      }
+    }
+  }
+}

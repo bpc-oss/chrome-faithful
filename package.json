@@ -1,0 +1,43 @@
+{
+  "name": "chrome-faithful",
+  "version": "0.3.1",
+  "type": "module",
+  "description": "Faithful control of your real, logged-in Chrome profiles: MCP server + MV3 extension + authenticated localhost bridge. No copied profiles, no debug profile, no remote-debugging port, no Edge.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bpc-oss/chrome-faithful.git"
+  },
+  "keywords": [
+    "chrome",
+    "cdp",
+    "mcp",
+    "chrome-debugger",
+    "browser-automation",
+    "mv3",
+    "codex",
+    "claude",
+    "multi-profile"
+  ],
+  "scripts": {
+    "build:extension": "node scripts/build-extension-runtime.mjs",
+    "generate:parity-map": "node scripts/generate-codex-adapter-map.mjs",
+    "check": "node scripts/check.mjs",
+    "check:parity": "node scripts/check-codex-parity.mjs",
+    "test": "node --test test/*.test.mjs",
+    "start": "node src/mcp-server.mjs",
+    "bridge": "node src/bridge-server.mjs",
+    "build:mcpb": "node scripts/build-mcpb.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "puppeteer-core": "24.35.0",
+    "ws": "^8.18.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1"
+  }
+}

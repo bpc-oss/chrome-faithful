@@ -1,0 +1,151 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/main/schemas/mcpb-manifest-v0.4.schema.json",
+  "manifest_version": "0.4",
+  "name": "agentos-chrome-cdp",
+  "display_name": "Agent OS Chrome CDP",
+  "version": "0.3.1",
+  "description": "Control exact existing Chrome profiles through an authenticated localhost chrome.debugger bridge.",
+  "long_description": "Provides Codex-compatible exact-profile Chrome tabs, locators, raw CDP, event streaming, screenshots, history, clipboard, coordinate input, page File plus DataTransfer injection, profile-bound page asset export, and durable virtual-list capture. It never launches a debug profile or remote-debugging port.",
+  "author": {
+    "name": "Agent OS"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "server/src/mcp-server.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/src/mcp-server.mjs"
+      ],
+      "env": {
+        "AGENTOS_CHROME_CONFIG": "${user_config.config_file}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "chrome_profiles",
+      "description": "List exact connected Chrome profiles."
+    },
+    {
+      "name": "chrome_selftest",
+      "description": "Run a tab-scoped extension and CDP self-test."
+    },
+    {
+      "name": "chrome_tabs",
+      "description": "List and control tabs in one exact profile."
+    },
+    {
+      "name": "chrome_cdp",
+      "description": "Send CDP commands or read CDP events."
+    },
+    {
+      "name": "chrome_locator",
+      "description": "Use Playwright-like locators on an exact tab."
+    },
+    {
+      "name": "chrome_history",
+      "description": "Search history in one exact profile."
+    },
+    {
+      "name": "chrome_clipboard",
+      "description": "Read or write the authorized extension clipboard."
+    },
+    {
+      "name": "chrome_file_inject",
+      "description": "Inject local files with page File objects and DataTransfer."
+    },
+    {
+      "name": "chrome_page_asset",
+      "description": "Export a page-exposed asset inside the exact bound profile without exposing signed URLs."
+    },
+    {
+      "name": "chrome_page_asset_v2",
+      "description": "Export and validate a page-exposed asset with bounded profile-scoped diagnostics."
+    },
+    {
+      "name": "chrome_network_asset_v1",
+      "description": "Export a response-backed asset from the exact profile without exposing private response URLs."
+    },
+    {
+      "name": "chrome_cua",
+      "description": "Send coordinate mouse, keyboard, typing, and scroll input."
+    },
+    {
+      "name": "chrome_playwright_v2",
+      "description": "Run the complete Codex-compatible page and locator surface in an exact profile."
+    },
+    {
+      "name": "chrome_dom_cua_v2",
+      "description": "Inspect and control visible DOM nodes by stable snapshot node id."
+    },
+    {
+      "name": "chrome_content_v2",
+      "description": "Extract temporary tab content or export current-tab and Google Workspace content."
+    },
+    {
+      "name": "chrome_page_event_v2",
+      "description": "Wait for and act on downloads, file choosers, and JavaScript dialogs."
+    },
+    {
+      "name": "chrome_session_v2",
+      "description": "Name, preserve, and finalize exact-profile browser sessions."
+    },
+    {
+      "name": "chrome_cua_scroll_capture_v1",
+      "description": "Capture structured data while scrolling a virtualized page."
+    },
+    {
+      "name": "chrome_cua_scroll_capture_v2",
+      "description": "Capture structured virtual-list data with bounded completion diagnostics."
+    },
+    {
+      "name": "chrome_cua_scroll_asset_capture_start_v1",
+      "description": "Start or resume a durable profile-bound virtual-list asset capture."
+    },
+    {
+      "name": "chrome_cua_scroll_asset_capture_status_v1",
+      "description": "Read durable virtual-list asset capture status from its manifest."
+    },
+    {
+      "name": "chrome_cua_scroll_asset_capture_start_v2",
+      "description": "Start or resume detached durable asset capture with rewind, bounded asset timeouts, and explicit execution diagnostics."
+    },
+    {
+      "name": "chrome_cua_scroll_asset_capture_status_v2",
+      "description": "Read bounded durable asset capture status and diagnostics."
+    },
+    {
+      "name": "chrome_cua_scroll_asset_capture_cancel_v2",
+      "description": "Cancel one running durable asset capture and persist fail-closed terminal evidence."
+    },
+    {
+      "name": "chrome_screenshot",
+      "description": "Capture a tab screenshot as PNG."
+    }
+  ],
+  "keywords": [
+    "chrome",
+    "cdp",
+    "browser",
+    "agent-os",
+    "mcp"
+  ],
+  "compatibility": {
+    "platforms": [
+      "win32"
+    ],
+    "runtimes": {
+      "node": ">=20.0.0"
+    }
+  },
+  "user_config": {
+    "config_file": {
+      "type": "file",
+      "title": "Agent OS Chrome configuration",
+      "description": "Select the private external config.json created by the Agent OS Chrome CDP installer.",
+      "required": true,
+      "default": "${HOME}/AppData/Local/AgentOS/agentos-chrome-cdp/config.json"
+    }
+  }
+}

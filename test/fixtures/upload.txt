@@ -1,0 +1,1 @@
+Agent OS Chrome CDP file-injection acceptance fixture.

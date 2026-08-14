@@ -1,0 +1,8 @@
+{
+  "name": "agentos-chrome-cdp",
+  "version": "0.3.1",
+  "description": "Control exact logged-in Chrome profiles with a Codex-compatible browser API.",
+  "author": {
+    "name": "Agent OS"
+  }
+}

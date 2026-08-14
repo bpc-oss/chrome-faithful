@@ -1,0 +1,7 @@
+{
+  "_notice": "Non-secret defaults only. The installer creates the bridge secret in the private external config.",
+  "host": "127.0.0.1",
+  "port": 18755,
+  "commandTimeoutMs": 60000,
+  "profileAliases": {}
+}

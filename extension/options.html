@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <title>Agent OS Chrome CDP</title>
+    <style>
+      body{font:15px system-ui;max-width:620px;margin:40px auto;padding:0 20px;color:#222}
+      label{display:block;margin:18px 0 6px;font-weight:600}
+      input{box-sizing:border-box;width:100%;padding:9px}
+      button{margin-top:22px;padding:9px 18px}
+      #status{margin-left:12px}
+    </style>
+  </head>
+  <body>
+    <h1>Agent OS Chrome CDP</h1>
+    <p>每个 Chrome Profile 都要单独安装并填写它自己的精确显示名称，例如 <code>Profile A</code> 或 <code>Research</code>。</p>
+    <label for="profileName">Chrome Profile 名称</label>
+    <input id="profileName" autocomplete="off" required>
+    <label for="bridgeUrl">本地桥接地址</label>
+    <input id="bridgeUrl" value="ws://127.0.0.1:18755/extension">
+    <label for="secret">共享密钥</label>
+    <input id="secret" type="password" autocomplete="new-password" required>
+    <button id="save">保存并重连</button><span id="status"></span>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

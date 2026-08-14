@@ -1,0 +1,586 @@
+{
+  "Agent": {
+    "browsers": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "createAgent.browsers"
+    },
+    "documentation": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "createAgent.documentation"
+    }
+  },
+  "Browsers": {
+    "get": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "createAgent.browsers.get"
+    },
+    "getDefault": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "createAgent.browsers.getDefault"
+    },
+    "getForUrl": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "createAgent.browsers.getForUrl"
+    },
+    "list": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "createAgent.browsers.list"
+    }
+  },
+  "Browser": {
+    "browserId": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.browserId"
+    },
+    "capabilities": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.capabilities"
+    },
+    "tabs": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.tabs"
+    },
+    "user": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.user"
+    },
+    "documentation": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.documentation"
+    },
+    "nameSession": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.nameSession"
+    }
+  },
+  "BrowserUser": {
+    "claimTab": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.user.claimTab"
+    },
+    "history": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.user.history"
+    },
+    "openTabs": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.user.openTabs"
+    }
+  },
+  "Tabs": {
+    "content": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.tabs.content"
+    },
+    "finalize": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.tabs.finalize"
+    },
+    "get": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.tabs.get"
+    },
+    "list": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.tabs.list"
+    },
+    "new": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.tabs.new"
+    },
+    "selected": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeBrowser.tabs.selected"
+    }
+  },
+  "Tab": {
+    "capabilities": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.capabilities"
+    },
+    "clipboard": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.clipboard"
+    },
+    "content": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.content"
+    },
+    "cua": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.cua"
+    },
+    "dev": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.dev"
+    },
+    "dom_cua": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.dom_cua"
+    },
+    "id": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.id"
+    },
+    "playwright": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright"
+    },
+    "back": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.back"
+    },
+    "close": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.close"
+    },
+    "forward": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.forward"
+    },
+    "getJsDialog": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.getJsDialog"
+    },
+    "goto": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.goto"
+    },
+    "markDeliverable": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.markDeliverable"
+    },
+    "markHandoff": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.markHandoff"
+    },
+    "reload": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.reload"
+    },
+    "screenshot": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.screenshot"
+    },
+    "title": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.title"
+    },
+    "url": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.url"
+    }
+  },
+  "ContentAPI": {
+    "export": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.content.export"
+    },
+    "exportGsuite": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.content.exportGsuite"
+    }
+  },
+  "CUAAPI": {
+    "click": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.cua.click"
+    },
+    "double_click": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.cua.double_click"
+    },
+    "downloadMedia": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.cua.downloadMedia"
+    },
+    "drag": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.cua.drag"
+    },
+    "keypress": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.cua.keypress"
+    },
+    "move": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.cua.move"
+    },
+    "scroll": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.cua.scroll"
+    },
+    "type": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.cua.type"
+    }
+  },
+  "DomCUAAPI": {
+    "click": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.dom_cua.click"
+    },
+    "double_click": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.dom_cua.double_click"
+    },
+    "downloadMedia": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.dom_cua.downloadMedia"
+    },
+    "get_visible_dom": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.dom_cua.get_visible_dom"
+    },
+    "keypress": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.dom_cua.keypress"
+    },
+    "scroll": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.dom_cua.scroll"
+    },
+    "type": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.dom_cua.type"
+    }
+  },
+  "PlaywrightAPI": {
+    "domSnapshot": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.domSnapshot"
+    },
+    "elementInfo": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.elementInfo"
+    },
+    "elementScreenshot": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.elementScreenshot"
+    },
+    "evaluate": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.evaluate"
+    },
+    "expectNavigation": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.expectNavigation"
+    },
+    "frameLocator": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.frameLocator"
+    },
+    "getByLabel": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.getByLabel"
+    },
+    "getByPlaceholder": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.getByPlaceholder"
+    },
+    "getByRole": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.getByRole"
+    },
+    "getByTestId": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.getByTestId"
+    },
+    "getByText": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.getByText"
+    },
+    "locator": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.locator"
+    },
+    "waitForEvent": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.waitForEvent"
+    },
+    "waitForLoadState": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.waitForLoadState"
+    },
+    "waitForTimeout": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.waitForTimeout"
+    },
+    "waitForURL": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.playwright.waitForURL"
+    }
+  },
+  "PlaywrightFrameLocator": {
+    "frameLocator": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "FrameLocator.frameLocator"
+    },
+    "getByLabel": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "FrameLocator.getByLabel"
+    },
+    "getByPlaceholder": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "FrameLocator.getByPlaceholder"
+    },
+    "getByRole": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "FrameLocator.getByRole"
+    },
+    "getByTestId": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "FrameLocator.getByTestId"
+    },
+    "getByText": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "FrameLocator.getByText"
+    },
+    "locator": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "FrameLocator.locator"
+    }
+  },
+  "PlaywrightLocator": {
+    "all": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.all"
+    },
+    "allTextContents": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.allTextContents"
+    },
+    "and": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.and"
+    },
+    "check": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.check"
+    },
+    "click": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.click"
+    },
+    "count": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.count"
+    },
+    "dblclick": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.dblclick"
+    },
+    "downloadMedia": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.downloadMedia"
+    },
+    "evaluate": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.evaluate"
+    },
+    "fill": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.fill"
+    },
+    "filter": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.filter"
+    },
+    "first": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.first"
+    },
+    "getAttribute": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.getAttribute"
+    },
+    "getByLabel": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.getByLabel"
+    },
+    "getByPlaceholder": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.getByPlaceholder"
+    },
+    "getByRole": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.getByRole"
+    },
+    "getByTestId": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.getByTestId"
+    },
+    "getByText": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.getByText"
+    },
+    "innerText": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.innerText"
+    },
+    "isEnabled": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.isEnabled"
+    },
+    "isVisible": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.isVisible"
+    },
+    "last": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.last"
+    },
+    "locator": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.locator"
+    },
+    "nth": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.nth"
+    },
+    "or": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.or"
+    },
+    "press": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.press"
+    },
+    "selectOption": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.selectOption"
+    },
+    "setChecked": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.setChecked"
+    },
+    "textContent": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.textContent"
+    },
+    "type": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.type"
+    },
+    "uncheck": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.uncheck"
+    },
+    "waitFor": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "Locator.waitFor"
+    }
+  },
+  "PlaywrightDownload": {
+    "path": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "BrowserDownload.path"
+    }
+  },
+  "PlaywrightFileChooser": {
+    "isMultiple": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "BrowserFileChooser.isMultiple"
+    },
+    "setFiles": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "BrowserFileChooser.setFiles"
+    }
+  },
+  "TabClipboardAPI": {
+    "read": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.clipboard.read"
+    },
+    "readText": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.clipboard.readText"
+    },
+    "write": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.clipboard.write"
+    },
+    "writeText": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.clipboard.writeText"
+    }
+  },
+  "TabDevAPI": {
+    "logs": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "ChromeTab.dev.logs"
+    }
+  },
+  "AlertDialog": {
+    "type": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "browserDialog.alert.type"
+    },
+    "dismiss": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "browserDialog.alert.dismiss"
+    }
+  },
+  "BeforeUnloadDialog": {
+    "type": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "browserDialog.beforeunload.type"
+    },
+    "dismiss": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "browserDialog.beforeunload.dismiss"
+    }
+  },
+  "BrowserDocumentation": {
+    "api": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "BrowserDocumentationStore.api"
+    },
+    "get": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "BrowserDocumentationStore.get"
+    },
+    "guidance": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "BrowserDocumentationStore.guidance"
+    },
+    "lookupCatalog": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "BrowserDocumentationStore.lookupCatalog"
+    }
+  },
+  "ConfirmDialog": {
+    "type": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "browserDialog.confirm.type"
+    },
+    "accept": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "browserDialog.confirm.accept"
+    },
+    "dismiss": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "browserDialog.confirm.dismiss"
+    }
+  },
+  "Documentation": {
+    "get": {
+      "module": "src/agent-browser.mjs",
+      "implementation": "createAgent.documentation.get"
+    }
+  },
+  "PromptDialog": {
+    "type": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "browserDialog.prompt.type"
+    },
+    "accept": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "browserDialog.prompt.accept"
+    },
+    "dismiss": {
+      "module": "src/extension-runtime/entry.mjs + src/agent-browser.mjs",
+      "implementation": "browserDialog.prompt.dismiss"
+    }
+  }
+}

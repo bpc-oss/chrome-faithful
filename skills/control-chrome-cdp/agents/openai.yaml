@@ -1,0 +1,11 @@
+interface:
+  display_name: "Control Chrome with CDP"
+  short_description: "Reuse local Chrome through Browser Use MCP"
+  default_prompt: "Use $control-chrome-cdp to inspect and control my current Chrome session safely."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "agentos-chrome-cdp"
+      description: "Local Browser Use MCP with browser execution, screenshots, and raw CDP"
+policy:
+  allow_implicit_invocation: true

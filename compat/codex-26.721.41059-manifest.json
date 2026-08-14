@@ -1,0 +1,8 @@
+{
+  "source": "Codex bundled chrome plugin docs (openai-bundled/chrome/26.721.41059/docs/api.json). See compat/README.md for regeneration from a local Codex install.",
+  "version": "26.721.41059",
+  "sha256": "33e761f616e8f7057bb43841edcadfc64f0747202b08355099473c18f3ebb4c3",
+  "interfaces": 22,
+  "interfaceMembers": 135,
+  "types": 58
+}

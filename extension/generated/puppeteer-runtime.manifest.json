@@ -1,0 +1,14 @@
+{
+  "entry": "src/extension-runtime/entry.mjs",
+  "output": "extension/generated/puppeteer-runtime.js",
+  "bytes": 924149,
+  "sha256": "0668642d4c4423a26130bd4e50d7e9283a7e04b3b16b435eb904dbefcc40d70f",
+  "dependencies": {
+    "puppeteer-core": "24.35.0",
+    "esbuild": "0.28.1"
+  },
+  "transport": "ExtensionTransport.connectTab",
+  "browserLauncherExposed": false,
+  "browserLauncherInvoked": false,
+  "remoteDebuggingPortIncluded": false
+}
