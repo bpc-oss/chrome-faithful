@@ -1,0 +1,20 @@
+# chrome-faithful DSH bundle layer.
+#
+# When this bundle is installed into a DSH profile (via
+# `dsh plugin --profile <name> add github:bpc-oss/chrome-faithful` or a local
+# checkout), this patch mounts the chrome-faithful MCP server through the
+# official MCP client bridge, exposing its tools to the model as
+# `mcp__chrome_faithful__*`.
+#
+# The server entry point is the committed source file src/mcp-server.mjs
+# (plain ESM, Node >= 20); the bridge launches it with the profile's node.
+- insert:
+    - id: mcp-chrome-faithful
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: chrome_faithful
+        transport: stdio
+        command: node
+        args:
+          - !!js 'import.meta.resolve("chrome-faithful/src/mcp-server.mjs").replace(/^file:\/\//, "")'
+        cwd: !!js process.cwd()

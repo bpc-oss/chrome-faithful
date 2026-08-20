@@ -80,5 +80,10 @@
     "@deepseek-ai/dsh-mcp-client": "0.1.0-rc.6",
     "esbuild": "0.28.1",
     "yaml": "2.9.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
   }
 }
