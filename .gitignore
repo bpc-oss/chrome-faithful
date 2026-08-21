@@ -24,3 +24,6 @@ tmp/
 
 # Live-test evidence output
 scripts/verification/live-tests/evidence/
+
+# Headless pairing (contains bridge secret)
+extension/pairing.json

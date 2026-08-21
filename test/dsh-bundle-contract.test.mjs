@@ -99,3 +99,27 @@ test("excludes undefined and non-string visual environment values", async () => 
 
   assert.deepEqual(result.config.env, { CHROME_FAITHFUL_OCR_BACKEND: "ppocr" });
 });
+
+test("evaluates the repository-root bundle row for git installs", async () => {
+  const { loadDshBundlePatch } = await loadHelper();
+  const profileRoot = await mkdtemp(path.join(tmpdir(), "chrome-faithful-dsh-root-"));
+  await writeFile(path.join(profileRoot, "package.json"), '{"private":true}\n');
+  await mkdir(path.join(profileRoot, "node_modules"), { recursive: true });
+  await symlink(root, path.join(profileRoot, "node_modules", "chrome-faithful"), "junction");
+  const result = await loadDshBundlePatch({
+    patchPath: path.join(root, "cordis.patch.yml"),
+    baseUrl: path.join(profileRoot, "package.json"),
+    environment: {}
+  });
+
+  assert.equal(result.id, "chrome-faithful-mcp");
+  assert.equal(result.name, "@deepseek-ai/dsh-mcp-client");
+  assert.equal(result.config.serverName, "chrome_faithful");
+  assert.equal(result.config.transport, "stdio");
+  assert.equal(result.config.command, process.execPath);
+  assert.equal(
+    result.config.args[0],
+    path.join(root, "src", "mcp-server.mjs")
+  );
+  assert.equal(result.config.failOnStartupError, true);
+});

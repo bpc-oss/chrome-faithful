@@ -6,15 +6,21 @@
 # official MCP client bridge, exposing its tools to the model as
 # `mcp__chrome_faithful__*`.
 #
-# The server entry point is the committed source file src/mcp-server.mjs
-# (plain ESM, Node >= 20); the bridge launches it with the profile's node.
+# The server entry resolves through the package's own exports
+# ("./mcp-server" -> src/mcp-server.mjs) relative to the profile install.
+# The !!js expressions run in the DSH host's composition context
+# (process.getBuiltinModule requires host Node >= 22.3).
 - insert:
-    - id: mcp-chrome-faithful
+    - id: chrome-faithful-mcp
       name: '@deepseek-ai/dsh-mcp-client'
       config:
         serverName: chrome_faithful
         transport: stdio
-        command: node
+        command: !!js process.execPath
         args:
-          - !!js 'import.meta.resolve("chrome-faithful/src/mcp-server.mjs").replace(/^file:\/\//, "")'
-        cwd: !!js process.cwd()
+          - !!js >-
+              process.getBuiltinModule('node:module').createRequire(baseUrl).resolve('chrome-faithful/mcp-server')
+        env: !!js >-
+          Object.fromEntries(['AGENTOS_CHROME_CONFIG', 'AGENTOS_VERIFICATION_BACKEND'].flatMap((key) => typeof process.env[key] === 'string' ? [[key, process.env[key]]] : []))
+        toolCallTimeoutMs: 60000
+        failOnStartupError: true
