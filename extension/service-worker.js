@@ -5,6 +5,48 @@ import {
   updateBrowserDownload
 } from "./generated/puppeteer-runtime.js";
 
+// Headless provisioning: when chrome.storage.local has no bridge config and a
+// `pairing.json` file exists in the extension directory, adopt it. This
+// enables fully automated deployments (dedicated agent machines, cloud
+// servers, CI) where no options-page interaction is possible. The file is
+// operator-provisioned on the machine itself; strict validation applies.
+(async () => {
+  try {
+    const current = await chrome.storage.local.get(["profileName", "bridgeUrl", "secret"]);
+    if (current.profileName && current.bridgeUrl && current.secret) return;
+    const response = await fetch(chrome.runtime.getURL("pairing.json"), { cache: "no-store" });
+    if (!response.ok) return;
+    const pairing = await response.json();
+    const bridgeUrl = String(pairing.bridgeUrl || "").trim();
+    let parsed;
+    try {
+      parsed = new URL(bridgeUrl);
+    } catch {
+      return;
+    }
+    const port = Number(parsed.port);
+    if (
+      parsed.protocol !== "ws:"
+      || parsed.hostname !== "127.0.0.1"
+      || parsed.username
+      || parsed.password
+      || !Number.isInteger(port)
+      || port < 1024
+      || port > 65535
+      || parsed.pathname !== "/extension"
+      || parsed.search
+      || parsed.hash
+    ) return;
+    const profileName = String(pairing.profileName || "").trim();
+    const secret = String(pairing.secret || "").trim();
+    if (!profileName || profileName.length > 64 || !/^[A-Za-z0-9+/]{43}=$/.test(secret)) return;
+    await chrome.storage.local.set({ profileName, bridgeUrl: `ws://127.0.0.1:${port}/extension`, secret });
+    console.error("[chrome-faithful] headless provisioning applied from pairing.json");
+  } catch (error) {
+    console.error("[chrome-faithful] headless provisioning failed:", error?.message || String(error));
+  }
+})();
+
 const OFFSCREEN_URL = "offscreen.html";
 const NETWORK_ENABLE_PARAMS = Object.freeze({
   maxTotalBufferSize: 20 * 1024 * 1024,
